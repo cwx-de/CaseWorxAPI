@@ -1,3 +1,4 @@
+![Validation Status](http://validator.swagger.io/validator?url=https://raw.githubusercontent.com/cwx-de/CaseWorxAPI/master/openapi/cwx-api.yaml)
 # CaseWorx API
 --------------
 
