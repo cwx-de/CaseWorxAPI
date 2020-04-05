@@ -1,0 +1,938 @@
+openapi: 3.0.0
+info:
+  version: 0.3.4
+  title: CaseWorx API
+  description: |
+    [CaseWorx](https://app.caseworx-baurecht.de/) API
+servers:
+  - description: Production environment
+    url: 'https://api.caseworx-baurecht.de/v0'
+tags:
+  - name: cases
+    description: Operations on cases
+  - name: documents
+    description: Operations on document resources
+  - name: media
+    description: Operations on document media (aka the body of the document as opposed to metadata)
+security:
+  - apiKeyAuth: []
+  - oAuth2AuthCodePrd: []
+  - oAuth2AuthCodeNonPrd: []
+  - oAuth2RopcPrd: []
+  - oAuth2RopcNonPrd: []
+paths:
+  /cases:
+    get:
+      tags:
+        - cases
+      description: Returns a collecion of all cases the user has access to
+      responses:
+        '200':
+          description: Returns an array of cases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  description: User-controlled properties of a case
+                  type: object
+                  required:
+                    - id
+                    - name
+                    - client
+                    - references
+                  properties:
+                    id:
+                      description: Internal ID of the case
+                      type: integer
+                      format: int64
+                      minimum: 0
+                      readOnly: true
+                      example: 12345
+                    readOnly:
+                      description: Indication whether or not the case is available to the user performing request in read only mode.
+                      type: boolean
+                      example: true
+                    created:
+                      description: Case creation timestamp
+                      type: string
+                      format: date-time
+                      readOnly: true
+                      example: '2020-01-18T18:00:00Z'
+                    updated:
+                      description: Case last update timestamp
+                      type: string
+                      format: date-time
+                      readOnly: true
+                      example: '2020-01-18T18:00:00Z'
+                    name:
+                      description: Case name / Name des Mandats
+                      type: string
+                      minLength: 1
+                      example: My test mandate
+                    client:
+                      description: Name of a client for whom the case is opened / Name des Mandanten
+                      type: string
+                      minLength: 1
+                      example: John Doe
+                    description:
+                      description: |
+                        Description of a case / Kurzbeschreibung
+                      type: string
+                      minLength: 1
+                      maxLength: 300
+                      example: A demo mandate
+                    references:
+                      description: |
+                        A collection of reference numbers of a case / Aktenzeichen  
+                        A case requires minimum one reference number. Reference numbers must be unique.
+                      type: array
+                      items:
+                        description: Label representing a reference number
+                        type: string
+                        minLength: 1
+                      uniqueItems: true
+                      minItems: 1
+                      maxItems: 20
+                      example:
+                        - 123/2020
+                        - 12/A/20
+        '400':
+          description: |
+            Bad request  
+            All otherwise unhandled client-side errors. Check the request parameters.
+          content:
+            application/json:
+              schema:
+                description: Standard error object
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 100000
+                  message:
+                    type: string
+                    minLength: 1
+                    example: Something went wrong
+                  hint:
+                    type: string
+                    minLength: 1
+                    example: Fix the problem
+                required:
+                  - message
+        '401':
+          description: |
+            Unauthorized  
+            Check access token. The token might be invalid or might have expired.  
+            Sent when the identity of the user cannot be established (including cases when the token cannot be trusted)
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+        '403':
+          description: |
+            Forbidden  
+            The user for whom the access token was issued cannot access requested resource. Check access rights of the user.  
+            Sent when the identity of the user has been established and the user has not been granted permission to access the resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+        '500':
+          description: |
+            Internal server error  
+            All unhandled server-side errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+    post:
+      tags:
+        - cases
+      description: Creates a new case resource
+      requestBody:
+        description: Case item to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/paths/~1cases/get/responses/200/content/application~1json/schema/items'
+      responses:
+        '201':
+          description: |
+            New case item successfully added.
+          headers:
+            location:
+              description: URL of the created resource
+              schema:
+                type: string
+              example: 'https://api.caseworx-baurecht.de/v0/cases/12345'
+        '400':
+          $ref: '#/paths/~1cases/get/responses/400'
+        '401':
+          $ref: '#/paths/~1cases/get/responses/401'
+        '403':
+          $ref: '#/paths/~1cases/get/responses/403'
+        '500':
+          $ref: '#/paths/~1cases/get/responses/500'
+  '/cases/{caseId}':
+    parameters:
+      - name: caseId
+        description: Case identifier
+        in: path
+        required: true
+        schema:
+          description: 'Standard resource ID (case, document)'
+          type: integer
+          format: int64
+          minimum: 0
+          example: 12345
+        example: 12345
+    delete:
+      tags:
+        - cases
+      description: Deletes a case together with all documents stored within and their relevant media
+      responses:
+        '202':
+          description: |
+            Resource not ready  
+            Requested resource exists but it has not yet reached the state in its lifecycle where the requested criteria are satisfied. It may or may not reach this state in the future.  
+            In requests changing state of a resource it means that the request has been accepted but not acted upon yet. It may or may not be in the future.
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+              example:
+                code: 202001
+                message: 'Requested media of the document resource {documentId} is not ready'
+                hint: Requested resource exists but it has not yet reached the state in its lifecycle where the requested criteria are satisfied. It may or may not reach this state in the future.
+        '204':
+          description: Confirms that the operation has been executed successfully
+        '400':
+          $ref: '#/paths/~1cases/get/responses/400'
+        '401':
+          $ref: '#/paths/~1cases/get/responses/401'
+        '403':
+          $ref: '#/paths/~1cases/get/responses/403'
+        '404':
+          description: |
+            Not Found  
+            Requested resource doesn't exist.  
+            Check how do you obtain the resource IDsused. Case or document might have been deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+        '500':
+          $ref: '#/paths/~1cases/get/responses/500'
+  '/cases/{caseId}/documents':
+    parameters:
+      - $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0'
+    get:
+      tags:
+        - documents
+      description: 'Returns selected properties of documents in a case. At present `id`, `title`, `date` and `types` are returned. Implementation may return other properties as well. Proper partial response will be implemented later. If a particular document exists only in its raw layer (not enriched) only `id` is returned.'
+      responses:
+        '200':
+          description: Returns an array of documents in a case with available properties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents~1%7BdocumentId%7D/get/responses/200/content/application~1json/schema/anyOf/0'
+                    - $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents~1%7BdocumentId%7D/get/responses/200/content/application~1json/schema/anyOf/1'
+        '400':
+          $ref: '#/paths/~1cases/get/responses/400'
+        '401':
+          $ref: '#/paths/~1cases/get/responses/401'
+        '403':
+          $ref: '#/paths/~1cases/get/responses/403'
+        '404':
+          $ref: '#/paths/~1cases~1%7BcaseId%7D/delete/responses/404'
+        '500':
+          $ref: '#/paths/~1cases/get/responses/500'
+    post:
+      tags:
+        - media
+      description: |
+        Uploads a document media. The upload results in creating a document resource.  
+        At present this is the only way to create a document resource - the creation flow starts with uploading the document media. Once the media is processed, the document resource receives its basic collection of metadata assigned by the system.
+      parameters:
+        - name: content-disposition
+          description: |
+            Provides a file name that should be assigned to the media resource being uploaded. See [RFC6266](https://tools.ietf.org/html/rfc6266). Disposition type 'attachment' and with disposition parameter 'filename'. Characters outside of ISO-8859-1 must use 'filename*' and URL-escaped UTF-8 encoding per [RFC6266 sec. 4.3](https://tools.ietf.org/html/rfc6266#section-4.3).
+          in: header
+          schema:
+            type: string
+          required: true
+          example: attachment; filename*=utf-8''d%C3%A9j%C3%A0vu.pdf
+        - $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/parameters/0'
+        - name: content-type
+          description: 'The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) of the content returned in payload'
+          in: header
+          schema:
+            description: Enumeration of supported content types that document media can be uploaded in
+            externalDocs:
+              description: Supported Media Types
+              url: 'https://confluence.wolterskluwer.io/display/WKBAUM/Supported+Media+Types'
+            type: string
+            enum:
+              - application/pdf
+              - application/vnd.oasis.opendocument.spreadsheet
+              - application/vnd.oasis.opendocument.spreadsheet-template
+              - application/vnd.sun.xml.calc
+              - application/vnd.ms-excel
+              - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+              - text/csv
+              - text/tab-separated-values
+              - application/vnd.oasis.opendocument.text
+              - application/vnd.oasis.opendocument.text-template
+              - application/vnd.sun.xml.writer
+              - application/rtf
+              - application/msword
+              - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+              - application/vnd.wordperfect
+              - text/plain
+              - application/vnd.oasis.opendocument.presentation
+              - application/vnd.oasis.opendocument.presentation-template
+              - application/vnd.sun.xml.impress
+              - application/vnd.ms-powerpoint
+              - application/vnd.openxmlformats-officedocument.presentationml.presentation
+              - image/jpeg
+              - image/bmp
+              - image/gif
+              - image/png
+              - image/tiff
+            default: application/pdf
+          required: true
+          example: application/pdf
+      requestBody:
+        description: |
+          Document body for upload. The document size limit is 4MB (4194304 bytes), for larger documents HTTP 413 is returned. Partial upload will be added later.  
+        content:
+          application/pdf:
+            schema:
+              description: PDF schema
+              type: string
+              format: binary
+          application/vnd.oasis.opendocument.spreadsheet:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/vnd.oasis.opendocument.spreadsheet-template:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/vnd.sun.xml.calc:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/vnd.ms-excel:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          text/csv:
+            schema:
+              description: Any octet stream payload schema
+              type: string
+              format: binary
+          text/tab-separated-values:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/vnd.oasis.opendocument.text:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/vnd.oasis.opendocument.text-template:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/vnd.sun.xml.writer:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/rtf:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/msword:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/vnd.wordperfect:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          text/plain:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/vnd.oasis.opendocument.presentation:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/vnd.oasis.opendocument.presentation-template:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/vnd.sun.xml.impress:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/vnd.ms-powerpoint:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/vnd.openxmlformats-officedocument.presentationml.presentation:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          image/jpeg:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          image/bmp:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          image/gif:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          image/png:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          image/tiff:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+      responses:
+        '201':
+          description: Document resource created and media successfully uploaded for the document
+          headers:
+            location:
+              description: URL of the created document resource
+              schema:
+                type: string
+                example: 'https://api.caseworx-baurecht.de/v0/cases/12345/documents/567890'
+              required: true
+        '400':
+          $ref: '#/paths/~1cases/get/responses/400'
+        '401':
+          $ref: '#/paths/~1cases/get/responses/401'
+        '403':
+          $ref: '#/paths/~1cases/get/responses/403'
+        '411':
+          $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/responses/411'
+        '413':
+          $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/responses/413'
+        '415':
+          $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/responses/415'
+        '500':
+          $ref: '#/paths/~1cases/get/responses/500'
+  '/cases/{caseId}/documents/{documentId}':
+    parameters:
+      - $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0'
+      - name: documentId
+        description: Document identifier
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 0
+        example: 67890
+    get:
+      tags:
+        - documents
+      description: Returns properties of a document
+      responses:
+        '200':
+          description: Returns properties of a document
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - description: Properties of original (not enriched) document
+                    type: object
+                    required:
+                      - id
+                    properties:
+                      id:
+                        description: Internal ID of the document
+                        type: integer
+                        format: int64
+                        minimum: 0
+                        readOnly: true
+                        example: 67890
+                      filename:
+                        description: Filename under which the document's media have been registered during upload
+                        type: string
+                        readOnly: true
+                        example: mySampleFile.pdf
+                      created:
+                        description: Document creation timestamp
+                        type: string
+                        format: date-time
+                        readOnly: true
+                        example: '2020-01-18T18:00:00Z'
+                      updated:
+                        description: Document last update timestamp
+                        type: string
+                        format: date-time
+                        readOnly: true
+                        example: '2020-01-18T18:00:00Z'
+                  - description: Properties of an enriched document resource
+                    allOf:
+                      - $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents~1%7BdocumentId%7D/get/responses/200/content/application~1json/schema/anyOf/0'
+                      - type: object
+                        description: Properties of a document resource
+                        required:
+                          - title
+                          - date
+                          - types
+                        properties:
+                          id:
+                            description: Internal ID of the document
+                            type: integer
+                            readOnly: true
+                            example: 67890
+                          filename:
+                            description: Filename under which the document's media have been registered during upload
+                            type: string
+                            readOnly: true
+                            example: mySampleFile.pdf
+                          created:
+                            description: Document creation timestamp
+                            type: string
+                            format: date-time
+                            readOnly: true
+                            example: '2020-01-18T18:00:00Z'
+                          updated:
+                            description: Document last update timestamp
+                            type: string
+                            format: date-time
+                            readOnly: true
+                            example: '2020-01-18T18:00:00Z'
+                          title:
+                            description: Document title / Dokumenttitel
+                            type: string
+                            minLength: 1
+                            example: My test document title
+                          date:
+                            description: Document date coordinate in the case timeline / Datum
+                            type: string
+                            format: date
+                            example: '2019-12-01'
+                          types:
+                            description: |
+                              A collection of document types / Dokumententyp  
+                              A document requires minimum one type. Types must be unique.  
+                            type: array
+                            items:
+                              type: string
+                              minLength: 1
+                            uniqueItems: true
+                            minItems: 1
+                            maxItems: 500
+                            example:
+                              - Fax
+                              - Complaint
+                          parties:
+                            description: |
+                              A collection of parties associated with a document / Beteiligte  
+                              Parties must be unique.
+                            type: array
+                            items:
+                              type: string
+                              minLength: 1
+                            uniqueItems: true
+                            maxItems: 500
+                            example:
+                              - John Doe
+                              - Acme Corp.
+                          trades:
+                            description: |
+                              A collection of technical trades associated with a document / Gewerk  
+                              Trades must be unique.
+                            type: array
+                            items:
+                              type: string
+                              minLength: 1
+                            uniqueItems: true
+                            maxItems: 500
+                            example:
+                              - plumbing
+                              - masonery
+                          defects:
+                            description: |
+                              A collection of defects associated with a document / Mängel  
+                              Defects must be unique.
+                            type: array
+                            items:
+                              type: integer
+                              minLength: 1
+                            uniqueItems: true
+                            maxItems: 500
+                            example:
+                              - 122562
+                              - 122680
+                          tags:
+                            description: |
+                              A collection of tags associated with a document / Eigene Schlagworte  
+                              Tags must be unique.
+                            type: array
+                            items:
+                              type: string
+                              minLength: 1
+                            uniqueItems: true
+                            maxItems: 500
+                            example:
+                              - to do
+                              - easy win
+                          suggestions:
+                            description: Automatically recognized values of document metadata
+                            type: object
+                            properties:
+                              defects:
+                                description: |
+                                  A collection of defects associated with a document / Mängel  
+                                  Defects must be unique.
+                                type: object
+                                properties:
+                                  descriptions:
+                                    type: array
+                                    items:
+                                      type: string
+                                    uniqueItems: true
+                                    maxItems: 500
+                                  identifiers:
+                                    type: array
+                                    items:
+                                      type: string
+                                    uniqueItems: true
+                                    maxItems: 500
+                                  refs:
+                                    description: An array of references to defect identifiers
+                                    type: array
+                                    items:
+                                      type: integer
+                                    uniqueItems: true
+                                    maxItems: 500
+                                items:
+                                  type: string
+                                  minLength: 1
+                                uniqueItems: true
+                                maxItems: 500
+                                example:
+                                  descriptions:
+                                    - Mangel Nr. 122562
+                                    - Mangel Nr. 122680
+                                  identifiers:
+                                    - '122562'
+                                    - '122680'
+                                  refs:
+                                    - 12345
+                                    - 67890
+        '400':
+          $ref: '#/paths/~1cases/get/responses/400'
+        '401':
+          $ref: '#/paths/~1cases/get/responses/401'
+        '403':
+          $ref: '#/paths/~1cases/get/responses/403'
+        '404':
+          $ref: '#/paths/~1cases~1%7BcaseId%7D/delete/responses/404'
+        '500':
+          $ref: '#/paths/~1cases/get/responses/500'
+    delete:
+      tags:
+        - documents
+      description: Deletes a document together with all associated media
+      responses:
+        '202':
+          $ref: '#/paths/~1cases~1%7BcaseId%7D/delete/responses/202'
+        '204':
+          description: Confirms that the operation has been executed successfully
+        '400':
+          $ref: '#/paths/~1cases/get/responses/400'
+        '401':
+          $ref: '#/paths/~1cases/get/responses/401'
+        '403':
+          $ref: '#/paths/~1cases/get/responses/403'
+        '404':
+          $ref: '#/paths/~1cases~1%7BcaseId%7D/delete/responses/404'
+        '500':
+          $ref: '#/paths/~1cases/get/responses/500'
+  '/cases/{caseId}/documents/{documentId}/media':
+    parameters:
+      - $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0'
+      - $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents~1%7BdocumentId%7D/parameters/1'
+    get:
+      tags:
+        - media
+      description: |
+        Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.  
+      parameters:
+        - name: accept
+          description: |
+            a [list of media types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) the client is willing to accept. If Accept is not specified, defaults to \*/*.  
+          in: header
+          schema:
+            type: string
+          example: application/pdf
+        - name: range
+          description: 'Specifies the start and end position of bytes to be provided. When the total size of the media is greater than 4.5MB the client must retrieve the resource using range requests. See [RFC2616 sec. 14.35](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35). The value provided in this header must specify both first-byte-pos and last-byte-pos and cannot request multipart ranges. If it is omitted and the response payload size exceeds the 4.5MB limit HTTP 500 is thrown.'
+          in: header
+          schema:
+            type: string
+          example: bytes=0-4194303
+      responses:
+        '200':
+          description: Document media in binary format is returned in response payload with approriate headers.
+          headers:
+            content-type:
+              description: 'The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) of the content returned in payload'
+              schema:
+                type: string
+              example: application/pdf
+              required: true
+            content-disposition:
+              description: 'An [indication of how the returned content should be handled](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition). Filename must be specified. See [RFC6266 sec. 4.3](https://tools.ietf.org/html/rfc6266#section-4.3) for handling characters outside of ISO-8859-1.'
+              schema:
+                type: string
+              example: attachment; filename="mydocument.pdf"
+              required: true
+          content:
+            application/pdf:
+              schema:
+                $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/application~1pdf/schema'
+        '202':
+          $ref: '#/paths/~1cases~1%7BcaseId%7D/delete/responses/202'
+        '206':
+          description: Partial content has been successfully delivered. It means that requested range is satisfied and Content-Range indicates the actual content range delivered. This response will also be delivered in case requested range results in making the entire resource available.
+          headers:
+            content-type:
+              description: 'The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) of the original media whose part is returned in payload. At present only application/pdf can be downloaded.'
+              schema:
+                type: string
+              example: application/pdf
+              required: true
+            content-disposition:
+              description: 'An [indication of how the returned content should be handled](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition). Filename must be specified. See [RFC6266 sec. 4.3](https://tools.ietf.org/html/rfc6266#section-4.3) for handling characters outside of ISO-8859-1. The filename is that of the media object uploaded to the system.'
+              schema:
+                type: string
+              required: true
+              example: attachment; filename="mydocument.pdf"
+            content-range:
+              description: 'Indication of the part of the media being returned. The client should use it to determine whether or not the entire media object has been collected. It must specify instance-length. If a client requests range larger than the full media, the Content-Range header MUST indicate actual ranges that match instance-length.'
+              schema:
+                type: string
+              required: true
+              example: bytes 0-4194303/10000000
+            content-length:
+              description: 'An [indication of the content length](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/content-length) of the payload included in the response in octets'
+              schema:
+                type: integer
+                maximum: 4194304
+              required: true
+              example: 4194304
+          content:
+            application/pdf:
+              schema:
+                $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/application~1pdf/schema'
+        '400':
+          $ref: '#/paths/~1cases/get/responses/400'
+        '401':
+          $ref: '#/paths/~1cases/get/responses/401'
+        '403':
+          $ref: '#/paths/~1cases/get/responses/403'
+        '404':
+          $ref: '#/paths/~1cases~1%7BcaseId%7D/delete/responses/404'
+        '406':
+          description: |
+            Not Acceptable  
+            Content in required format is not available.  
+            Accept header indicates a media type that is not available.
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+        '416':
+          description: |
+            Requested range nof satisfiable  
+            The partial download request specifies the range of bytes that cannot be satisfied. Range is considered satisfiable if the resource and range overlap - in this case HTTP 206 is returned and Content-Range header indicates the part of the resource that is delivered.
+            Likely cause of this error is the first-byte-pos  greater than the entire length of resource. 
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+        '500':
+          $ref: '#/paths/~1cases/get/responses/500'
+  /uploads:
+    post:
+      tags:
+        - media
+      description: |
+        Creates an upload manager resource for executing partial uploads of a document media for a specified case.
+      parameters:
+        - name: case
+          description: |
+            References a case ID on which the operation is to be performed. The case must exist.
+          in: query
+          required: true
+          schema:
+            $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0/schema'
+          example: 12345
+      requestBody:
+        description: Properties of the media for which the upload is initiated
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fileName
+                - contentType
+                - contentLength
+              properties:
+                fileName:
+                  description: Filename to be ascribed to the media
+                  type: string
+                  minLength: 1
+                  example: myMedia.pdf
+                contentType:
+                  $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/parameters/2/schema'
+                contentLength:
+                  description: 'Length of the entire media object in bytes, for partial upload the media size should be greater than 4MB (4194304 bytes). For smaller media use simple upload.'
+                  type: integer
+                  minimum: 4194304
+                  example: 6000000
+      responses:
+        '201':
+          description: Upload manager resource created and ready for the parts to be uploaded
+          headers:
+            location:
+              description: URL of the created upload manager resource
+              schema:
+                type: string
+                example: 'https://api.caseworx-baurecht.de/v0/uploads/wnxwnikxiuwu0u3jd'
+              required: true
+          content:
+            application/json:
+              schema:
+                description: Returns URL to the upload manager resource and its expiration time
+                type: object
+                required:
+                  - uploadUrl
+                  - expires
+                properties:
+                  uploadUrl:
+                    description: URL of the created upload manager resource (repeats the value from the Location header)
+                    type: string
+                    minLength: 1
+                    example: 'https://api.caseworx-baurecht.de/v0/uploads/12345'
+                  expires:
+                    description: Expiration date and time of the upload manager resource. After this time the resource cannot be used. All parts of an unfinished upload will be destroyed.
+                    type: string
+                    format: date-time
+                    example: '2020-02-01T13:00:00.000Z'
+        '400':
+          $ref: '#/paths/~1cases/get/responses/400'
+        '401':
+          $ref: '#/paths/~1cases/get/responses/401'
+        '403':
+          $ref: '#/paths/~1cases/get/responses/403'
+        '500':
+          $ref: '#/paths/~1cases/get/responses/500'
+  '/uploads/{uploadId}':
+    parameters:
+      - name: uploadId
+        description: Id of the upload manager resource
+        in: path
+        schema:
+          description: Universal ID to be used unless specific validation restrictions are needed
+          type: string
+          maxLength: 50
+          example: 1234567
+        required: true
+        example: wnxwnikxiuwu0u3jd
+    put:
+      tags:
+        - media
+      description: |
+        Use an upload manager with the specified ID to exceute uploads of a document media part.  
+        The client must ensure that the last part is only uploaded when all previous uploads have finished successfully.
+      parameters:
+        - name: content-length
+          description: 'An [indication of the content length](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/content-length) in octets'
+          in: header
+          schema:
+            type: integer
+            maximum: 4194304
+          required: true
+          example: 1000
+        - name: content-range
+          description: |
+            Provides an indication of which part of the media object is being delivered. See [RFC7233 sec. 4.2](https://tools.ietf.org/html/rfc7233#section-4.2). Must specify byte-content-range with complete-length. Must be consistent with Content-Length value.
+          in: header
+          schema:
+            type: string
+          required: true
+          example: bytes 0-4194303/10000000
+        - name: content-type
+          description: 'The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) of the content returned in payload. For uploads of parts it must be application/octet-stream'
+          in: header
+          schema:
+            type: string
+            enum:
+              - application/octet-stream
+            default: application/octet-stream
+          required: true
+          example: application/octet-stream
+      responses:
+        '201':
+          description: 'Delivered part of the media object has been successfully uploaded. Based on the indications in the Content-Range headers the implementation has determined that all parts of the media object have been successfully received. The parts have been assembled, resulting document resource has been successfully created. The URL of the created document resource is returned in the Location header. The upload manager resource has been terminated and must not be used any longer.'
+          headers:
+            location:
+              description: URL of the created document resource
+              schema:
+                type: string
+                example: 'https://api.caseworx-baurecht.de/v0/cases/12345/documents/567890'
+              required: true
+        '202':
+          description: Delivered part of the media object has been successfully uploaded. Client is expected to continue upload of the remaining parts.
+        '400':
+          $ref: '#/paths/~1cases/get/responses/400'
+        '401':
+          $ref: '#/paths/~1cases/get/responses/401'
+        '403':
+          $ref: '#/paths/~1cases/get/responses/403'
+        '404':
+          $ref: '#/paths/~1cases~1%7BcaseId%7D/delete/responses/404'
+        '411':
+          description: |
+            Cannot establish request payload size  
+            Content-Length header either not specified or invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+        '413':
+          description: |
+            Request payload too large  
+            The document body cannot be larger than 4MB (4194304 bytes). Partial upload to be implemented later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+        '415':
+          description: |
+            Unsupported Media Type  
+            Content in required format is not available or cannot be accepted.  
+            Content-Type header indicates a media type that is not supported.
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+        '500':
+          $ref: '#/paths/~1cases/get/responses/500'
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+    oAuth2AuthCode:
+      description: OAuth2 authorization scheme for production endpoint (Authorization Code grant)
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: 'https://login.wolterskluwer.eu/as/authorization.oauth2?pfidpadapterid=JurionCompositeAdapter&prompt=login'
+          tokenUrl: 'https://login.wolterskluwer.eu/as/token.oauth2'
+          scopes: {}

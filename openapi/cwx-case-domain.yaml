@@ -1,0 +1,118 @@
+openapi: 3.0.0
+info:
+  title: CaseWorx API - Case Domain
+  description: |
+    [CaseWorx](https://app.caseworx-baurecht.de/) API - Case Domain describing components of the case
+  version: '0.0.1'
+  license: 
+    name: GNU Affero General Public License v3.0
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+  contact:
+    name: CaseWorx Support
+    email: caseworx@wolterskluwer.com
+
+components:
+  schemas:
+    Case:
+      description: User-controlled properties of a case
+      type: object
+      required:
+        - id
+        - name
+        - client
+        - references
+      properties:
+        id:
+          description: Internal ID of the case
+          type: integer
+          format: int64
+          minimum: 0
+          readOnly: true
+          example: 12345
+        readOnly:
+          description: Indication whether or not the case is available to the user performing request in read only mode.
+          type: boolean
+          example: true
+        created:
+          description: Case creation timestamp
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2020-01-18T18:00:00Z'
+        updated:
+          description: Case last update timestamp
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2020-01-18T18:00:00Z'
+        name:
+          description: Case name / Name des Mandats
+          type: string
+          minLength: 1
+          example: 'My test mandate'
+        client:
+          description: Name of a client for whom the case is opened / Name des Mandanten
+          type: string
+          minLength: 1
+          example: 'John Doe'
+        description:
+          description: |
+            Description of a case / Kurzbeschreibung
+          type: string
+          minLength: 1
+          maxLength: 300
+          example: 'A demo mandate'
+        references:
+          description: |
+            A collection of reference numbers of a case / Aktenzeichen  
+            A case requires minimum one reference number. Reference numbers must be unique.
+          type: array
+          items:
+            description: Label representing a reference number
+            type: string
+            minLength: 1
+          uniqueItems: true
+          minItems: 1
+          maxItems: 20
+          example: 
+            - 123/2020
+            - 12/A/20
+
+  parameters:
+    CaseId:
+      name: caseId
+      description: Case identifier
+      in: path
+      required: true
+      schema:
+        $ref: 'cwx-commons-domain.yaml#/components/schemas/ResourceId'
+      example: 12345
+
+    CaseQueryRef:
+      name: case
+      description: |
+        References a case ID on which the operation is to be performed. The case must exist.
+      in: query
+      required: true
+      schema:
+        $ref: 'cwx-commons-domain.yaml#/components/schemas/ResourceId'
+      example: 12345
+  
+  requestBodies:
+    CreateCase:
+      description: Case item to create
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Case'
+
+  responses:
+    CaseCreatedOK:
+      description: |
+        New case item successfully added.
+      headers:
+        location:
+          description: URL of the created resource
+          schema:
+            type: string
+          example: https://api.caseworx-baurecht.de/v0/cases/12345

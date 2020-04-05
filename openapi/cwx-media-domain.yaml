@@ -1,0 +1,411 @@
+openapi: 3.0.0
+info:
+  title: CaseWorx API - Media Domain
+  description: |
+    [CaseWorx](https://app.caseworx-baurecht.de/) API - Media Domain describing shared components of the API
+  version: '0.0.1'
+  license: 
+    name: GNU Affero General Public License v3.0
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+  contact:
+    name: CaseWorx Support
+    email: caseworx@wolterskluwer.com
+
+components:
+  schemas:
+    MediaLayer:
+      description: Indicates media layer
+      readOnly: true
+      type: string
+      enum:
+        - original
+        - unified
+      default: unified
+      example: original
+      
+    SupportedMediaTypes:
+      description: Enumeration of supported content types that document media can be uploaded in
+      externalDocs:
+        description: Supported Media Types
+        url: https://confluence.wolterskluwer.io/display/WKBAUM/Supported+Media+Types
+      type: string
+      enum:
+        - application/pdf
+        - application/vnd.oasis.opendocument.spreadsheet
+        - application/vnd.oasis.opendocument.spreadsheet-template
+        - application/vnd.sun.xml.calc
+        - application/vnd.ms-excel
+        - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        - text/csv
+        - text/tab-separated-values
+        - application/vnd.oasis.opendocument.text
+        - application/vnd.oasis.opendocument.text-template
+        - application/vnd.sun.xml.writer
+        - application/rtf
+        - application/msword
+        - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+        - application/vnd.wordperfect
+        - text/plain
+        - application/vnd.oasis.opendocument.presentation
+        - application/vnd.oasis.opendocument.presentation-template
+        - application/vnd.sun.xml.impress
+        - application/vnd.ms-powerpoint
+        - application/vnd.openxmlformats-officedocument.presentationml.presentation
+        - image/jpeg
+        - image/bmp
+        - image/gif
+        - image/png
+        - image/tiff
+      default: application/pdf
+      
+    OctetStreamPayload:
+      description: Any octet stream payload schema
+      type: string
+      format: binary
+    
+    PdfPayload:
+      description: PDF schema
+      type: string
+      format: binary
+
+  parameters:
+    UploadManagerId:
+      name: uploadId
+      description: Id of the upload manager resource
+      in: path
+      schema:
+        $ref: 'cwx-commons-domain.yaml#/components/schemas/UniversalId'
+      required: true
+      example: wnxwnikxiuwu0u3jd    
+    
+    LayerQueryRef:
+      name: layer
+      description: An indication of the media layer. If omitted, it defaults to `unified`.
+      in: query
+      schema:
+        $ref: '#/components/schemas/MediaLayer'
+      required: true
+      example: original
+
+    ContentDisposition:
+      name: content-disposition
+      description: |
+        Provides a file name that should be assigned to the media resource being uploaded. See [RFC6266](https://tools.ietf.org/html/rfc6266). Disposition type 'attachment' and with disposition parameter 'filename'. Characters outside of ISO-8859-1 must use 'filename*' and URL-escaped UTF-8 encoding per [RFC6266 sec. 4.3](https://tools.ietf.org/html/rfc6266#section-4.3).
+      in: header
+      schema:
+        type: string
+      required: true
+      example: attachment; filename*=utf-8''d%C3%A9j%C3%A0vu.pdf    
+
+    ContentLength:
+      name: content-length
+      description: An [indication of the content length](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/content-length) in octets
+      in: header
+      schema:
+        type: integer
+        maximum: 4194304
+      required: true
+      example: 1000
+
+    ContentType:
+      name: content-type
+      description: The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) of the content returned in payload
+      in: header
+      schema:
+        $ref: '#/components/schemas/SupportedMediaTypes'
+      required: true
+      example: application/pdf
+
+    PartialUploadContentType:
+      name: content-type
+      description: The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) of the content returned in payload. For uploads of parts it must be application/octet-stream
+      in: header
+      schema:
+        type: string
+        enum: 
+          - application/octet-stream
+        default: application/octet-stream
+      required: true
+      example: application/octet-stream
+          
+    Accept:
+      name: accept
+      description: |
+        a [list of media types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) the client is willing to accept. If Accept is not specified, defaults to \*/*.  
+      in: header
+      schema:
+        type: string
+      example: application/pdf    
+
+    Range:
+      name: range
+      description: Specifies the start and end position of bytes to be provided. When the total size of the media is greater than 4.5MB the client must retrieve the resource using range requests. See [RFC2616 sec. 14.35](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35). The value provided in this header must specify both first-byte-pos and last-byte-pos and cannot request multipart ranges. If it is omitted and the response payload size exceeds the 4.5MB limit HTTP 500 is thrown.
+      in: header
+      schema:
+        type: string
+      example: bytes=0-4194303
+    
+    ContentRange:
+      name: content-range
+      description: |
+        Provides an indication of which part of the media object is being delivered. See [RFC7233 sec. 4.2](https://tools.ietf.org/html/rfc7233#section-4.2). Must specify byte-content-range with complete-length. Must be consistent with Content-Length value.
+      in: header
+      schema:
+        type: string
+      required: true
+      example: bytes 0-4194303/10000000    
+      
+  requestBodies:
+    PartialUploadInit:
+      description: Properties of the media for which the upload is initiated
+      content:
+        'application/json':
+          schema:
+            type: object
+            required:
+              - fileName
+              - contentType
+              - contentLength
+            properties:
+              fileName:
+                description: Filename to be ascribed to the media
+                type: string
+                minLength: 1
+                example: myMedia.pdf
+              contentType:
+                '$ref': '#/components/schemas/SupportedMediaTypes'
+              contentLength:
+                description: Length of the entire media object in bytes, for partial upload the media size should be greater than 4MB (4194304 bytes). For smaller media use simple upload.
+                type: integer
+                minimum: 4194304
+                example: 6000000
+
+    SimpleMediaUpload:
+      description: |
+        Document body for upload. The document size limit is 4MB (4194304 bytes), for larger documents HTTP 413 is returned. Partial upload will be added later.  
+      content:
+        application/pdf:
+          schema:
+            $ref: '#/components/schemas/PdfPayload'
+        application/vnd.oasis.opendocument.spreadsheet:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.spreadsheet-template:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.sun.xml.calc:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.ms-excel:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        text/csv:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        text/tab-separated-values:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.text:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.text-template:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.sun.xml.writer:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/rtf:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/msword:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.wordperfect:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        text/plain:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.presentation:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.presentation-template:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.sun.xml.impress:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.ms-powerpoint:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.openxmlformats-officedocument.presentationml.presentation:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        image/jpeg:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        image/bmp:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        image/gif:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        image/png:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        image/tiff:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+            
+  responses:
+    SimpleMediaUploadOK:
+      description: Document resource created and media successfully uploaded for the document
+      headers:
+        location:
+          description: URL of the created document resource
+          schema:
+            type: string
+            example: https://api.caseworx-baurecht.de/v0/cases/12345/documents/567890
+          required: true
+
+    SimpleMediaDownloadOK:
+      description: Document media in binary format is returned in response payload with approriate headers.
+      headers:
+        content-type:
+          description: The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) of the content returned in payload
+          schema:
+            type: string
+          example: application/pdf
+          required: true
+        content-disposition:
+          description: An [indication of how the returned content should be handled](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition). Filename must be specified. See [RFC6266 sec. 4.3](https://tools.ietf.org/html/rfc6266#section-4.3) for handling characters outside of ISO-8859-1.
+          schema:
+            type: string
+          example: 'attachment; filename="mydocument.pdf"'
+          required: true
+      content:
+        application/pdf:
+          schema:
+            $ref: '#/components/schemas/PdfPayload'
+    PartialMediaDownloadOK:
+      description: Partial content has been successfully delivered. It means that requested range is satisfied and Content-Range indicates the actual content range delivered. This response will also be delivered in case requested range results in making the entire resource available.
+      headers:
+        content-type:
+          description: The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) of the original media whose part is returned in payload. At present only application/pdf can be downloaded.
+          schema:
+            type: string
+          example: application/pdf
+          required: true
+        content-disposition:
+          description: An [indication of how the returned content should be handled](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition). Filename must be specified. See [RFC6266 sec. 4.3](https://tools.ietf.org/html/rfc6266#section-4.3) for handling characters outside of ISO-8859-1. The filename is that of the media object uploaded to the system.
+          schema:
+            type: string
+          required: true
+          example: 'attachment; filename="mydocument.pdf"'
+        content-range:
+          description: Indication of the part of the media being returned. The client should use it to determine whether or not the entire media object has been collected. It must specify instance-length. If a client requests range larger than the full media, the Content-Range header MUST indicate actual ranges that match instance-length.
+          schema:
+            type: string
+          required: true
+          example: 'bytes 0-4194303/10000000'
+        content-length:
+          description: An [indication of the content length](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/content-length) of the payload included in the response in octets
+          schema:
+            type: integer
+            maximum: 4194304
+          required: true
+          example: 4194304            
+      content:
+        application/pdf:
+          schema:
+            $ref: '#/components/schemas/PdfPayload'
+
+    UploadManagerCreatedOK:
+      description: Upload manager resource created and ready for the parts to be uploaded
+      headers:
+        location:
+          description: URL of the created upload manager resource
+          schema:
+            type: string
+            example: https://api.caseworx-baurecht.de/v0/uploads/wnxwnikxiuwu0u3jd
+          required: true
+      content:
+        'application/json':
+          schema:
+            description: Returns URL to the upload manager resource and its expiration time
+            type: object
+            required:
+              - uploadUrl
+              - expires
+            properties:
+              uploadUrl:
+                description: URL of the created upload manager resource (repeats the value from the Location header)
+                type: string
+                minLength: 1
+                example: https://api.caseworx-baurecht.de/v0/uploads/12345
+              expires:
+                # implementation: set expires to 24 hrs after upload creation
+                description: Expiration date and time of the upload manager resource. After this time the resource cannot be used. All parts of an unfinished upload will be destroyed.
+                type: string
+                format: date-time
+                example: '2020-02-01T13:00:00.000Z'
+
+    PartialUploadFinishedOK:
+      description: Delivered part of the media object has been successfully uploaded. Based on the indications in the Content-Range headers the implementation has determined that all parts of the media object have been successfully received. The parts have been assembled, resulting document resource has been successfully created. The URL of the created document resource is returned in the Location header. The upload manager resource has been terminated and must not be used any longer.
+      headers:
+        location:
+          description: URL of the created document resource
+          schema:
+            type: string
+            example: https://api.caseworx-baurecht.de/v0/cases/12345/documents/567890
+          required: true
+          
+    Error406:
+      description: |
+        Not Acceptable  
+        Content in required format is not available.  
+        Accept header indicates a media type that is not available.
+      content:
+        application/json:
+          schema:
+            $ref: 'cwx-commons-domain.yaml#/components/schemas/Error'
+    Error411:
+      description: |
+        Cannot establish request payload size  
+        Content-Length header either not specified or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: 'cwx-commons-domain.yaml#/components/schemas/Error'
+    Error413:
+      description: |
+        Request payload too large  
+        The document body cannot be larger than 4MB (4194304 bytes). Partial upload to be implemented later.
+      content:
+        application/json:
+          schema:
+            $ref: 'cwx-commons-domain.yaml#/components/schemas/Error'
+    Error415:
+      description: |
+        Unsupported Media Type  
+        Content in required format is not available or cannot be accepted.  
+        Content-Type header indicates a media type that is not supported.
+      content:
+        application/json:
+          schema:
+            $ref: 'cwx-commons-domain.yaml#/components/schemas/Error'
+    Error416:
+      description: |
+        Requested range nof satisfiable  
+        The partial download request specifies the range of bytes that cannot be satisfied. Range is considered satisfiable if the resource and range overlap - in this case HTTP 206 is returned and Content-Range header indicates the part of the resource that is delivered.
+        Likely cause of this error is the first-byte-pos  greater than the entire length of resource. 
+      content:
+        application/json:
+          schema:
+            $ref: 'cwx-commons-domain.yaml#/components/schemas/Error'

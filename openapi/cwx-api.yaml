@@ -1,0 +1,322 @@
+openapi: 3.0.0
+info:
+  version: "0.3.4"
+  title: 'CaseWorx API'
+  description: |
+    [CaseWorx](https://app.caseworx-baurecht.de/) API
+
+servers:
+  - description: Production environment
+    url: https://api.caseworx-baurecht.de/v0
+
+tags: 
+  - name: cases
+    description: Operations on cases
+  - name: documents
+    description: Operations on document resources
+  - name: media
+    description: Operations on document media (aka the body of the document as opposed to metadata)
+  
+security: 
+  - apiKeyAuth: []
+  - oAuth2AuthCodePrd: []
+  - oAuth2AuthCodeNonPrd: []
+  - oAuth2RopcPrd: []
+  - oAuth2RopcNonPrd: []
+
+paths:
+  /cases:
+    # -------- List cases --------
+    get:
+      tags: 
+        - cases
+      description: Returns a collecion of all cases the user has access to
+      responses:
+        '200':
+          description: Returns an array of cases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: 'cwx-case-domain.yaml#/components/schemas/Case'
+        '400':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
+        '401':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
+        '403':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
+        '500':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
+
+    # -------- Create a case --------
+    post:
+      tags:
+        - cases
+      description: Creates a new case resource
+      requestBody:
+        $ref: 'cwx-case-domain.yaml#/components/requestBodies/CreateCase'
+      responses:
+        '201':
+          $ref: 'cwx-case-domain.yaml#/components/responses/CaseCreatedOK'
+        '400':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
+        '401':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
+        '403':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
+        '500':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
+
+  /cases/{caseId}:
+    parameters:
+      - $ref: 'cwx-case-domain.yaml#/components/parameters/CaseId'
+
+    # -------- Delete a case --------
+    delete:
+      tags:
+        - cases
+      description: Deletes a case together with all documents stored within and their relevant media
+      responses:
+        '202':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Info202'
+        '204':
+          description: Confirms that the operation has been executed successfully
+        '400':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
+        '401':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
+        '403':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
+        '404':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error404'
+        '500':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
+
+  /cases/{caseId}/documents:
+    parameters:
+      - $ref: 'cwx-case-domain.yaml#/components/parameters/CaseId'
+
+    # -------- List selected properties of all documents in a case --------
+    get:
+      tags:
+        - documents
+      description: Returns selected properties of documents in a case. At present `id`, `title`, `date` and `types` are returned. Implementation may return other properties as well. Proper partial response will be implemented later. If a particular document exists only in its raw layer (not enriched) only `id` is returned.
+      responses:
+        '200':
+          description: Returns an array of documents in a case with available properties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: 'cwx-document-domain.yaml#/components/schemas/DocumentRaw'
+                    - $ref: 'cwx-document-domain.yaml#/components/schemas/Document'
+        '400':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
+        '401':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
+        '403':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
+        '404':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error404'
+        '500':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
+
+    # -------- Create a new document in a case by document body upload --------
+    post:
+      tags:
+        - media
+      description: |
+        Uploads a document media. The upload results in creating a document resource.  
+        At present this is the only way to create a document resource - the creation flow starts with uploading the document media. Once the media is processed, the document resource receives its basic collection of metadata assigned by the system.
+      parameters:
+        - $ref: 'cwx-media-domain.yaml#/components/parameters/ContentDisposition'
+        - $ref: 'cwx-media-domain.yaml#/components/parameters/ContentLength'
+        - $ref: 'cwx-media-domain.yaml#/components/parameters/ContentType'
+
+      requestBody:
+        $ref: 'cwx-media-domain.yaml#/components/requestBodies/SimpleMediaUpload'
+
+      responses:
+        '201':
+          $ref: 'cwx-media-domain.yaml#/components/responses/SimpleMediaUploadOK'
+        '400':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
+        '401':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
+        '403':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
+        '411':
+          $ref: 'cwx-media-domain.yaml#/components/responses/Error411'
+        '413':
+          $ref: 'cwx-media-domain.yaml#/components/responses/Error413'
+        '415':
+          $ref: 'cwx-media-domain.yaml#/components/responses/Error415'
+        '500':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
+
+  /cases/{caseId}/documents/{documentId}:
+    parameters:
+      - $ref: 'cwx-case-domain.yaml#/components/parameters/CaseId'
+      - $ref: 'cwx-document-domain.yaml#/components/parameters/DocumentId'
+
+    # -------- Get document metadata --------
+    get:
+      tags:
+        - documents
+      description: Returns properties of a document
+      responses:
+        '200':
+          description: Returns properties of a document
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: 'cwx-document-domain.yaml#/components/schemas/DocumentRaw'
+                  - $ref: 'cwx-document-domain.yaml#/components/schemas/Document'
+
+        '400':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
+        '401':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
+        '403':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
+        '404':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error404'
+        '500':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
+
+    # -------- Delete a document --------
+    delete:
+      tags:
+        - documents
+      description: Deletes a document together with all associated media
+      responses:
+        '202':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Info202'
+        '204':
+          description: Confirms that the operation has been executed successfully
+        '400':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
+        '401':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
+        '403':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
+        '404':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error404'
+        '500':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
+
+  /cases/{caseId}/documents/{documentId}/media:
+    parameters:
+      - $ref: 'cwx-case-domain.yaml#/components/parameters/CaseId'
+      - $ref: 'cwx-document-domain.yaml#/components/parameters/DocumentId'
+
+    # -------- Download a document media --------
+    get:
+      tags: 
+        - media
+      description: |
+        Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.  
+      parameters:
+        - $ref: 'cwx-media-domain.yaml#/components/parameters/Accept'
+        - $ref: 'cwx-media-domain.yaml#/components/parameters/Range'
+
+      responses:
+        '200':
+          $ref: 'cwx-media-domain.yaml#/components/responses/SimpleMediaDownloadOK'
+        '202':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Info202'
+        '206':
+          $ref: 'cwx-media-domain.yaml#/components/responses/PartialMediaDownloadOK'
+        '400':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
+        '401':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
+        '403':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
+        '404':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error404'
+        '406':
+          $ref: 'cwx-media-domain.yaml#/components/responses/Error406'
+        '416':
+          $ref: 'cwx-media-domain.yaml#/components/responses/Error416'
+        '500':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
+
+  /uploads:
+    post:
+      tags:
+        - media
+      description: |
+        Creates an upload manager resource for executing partial uploads of a document media for a specified case.
+      parameters:
+        - $ref: 'cwx-case-domain.yaml#/components/parameters/CaseQueryRef'
+      requestBody:
+        $ref: 'cwx-media-domain.yaml#/components/requestBodies/PartialUploadInit'
+
+      responses:
+        '201':
+          $ref: 'cwx-media-domain.yaml#/components/responses/UploadManagerCreatedOK'
+        '400':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
+        '401':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
+        '403':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
+        '500':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
+
+  /uploads/{uploadId}:
+    parameters:
+      - $ref: 'cwx-media-domain.yaml#/components/parameters/UploadManagerId'
+
+    put:
+      tags:
+        - media
+      description: |
+        Use an upload manager with the specified ID to exceute uploads of a document media part.  
+        The client must ensure that the last part is only uploaded when all previous uploads have finished successfully.
+      parameters:
+        - $ref: 'cwx-media-domain.yaml#/components/parameters/ContentLength'
+        - $ref: 'cwx-media-domain.yaml#/components/parameters/ContentRange'
+        - $ref: 'cwx-media-domain.yaml#/components/parameters/PartialUploadContentType'
+
+      responses:
+        '201':
+          $ref: 'cwx-media-domain.yaml#/components/responses/PartialUploadFinishedOK'
+        '202':
+          description: Delivered part of the media object has been successfully uploaded. Client is expected to continue upload of the remaining parts.
+        '400':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
+        '401':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
+        '403':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
+        '404':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error404'
+        '411':
+          $ref: 'cwx-media-domain.yaml#/components/responses/Error411'
+        '413':
+          $ref: 'cwx-media-domain.yaml#/components/responses/Error413'
+        '415':
+          $ref: 'cwx-media-domain.yaml#/components/responses/Error415'
+        '500':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
+
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+    oAuth2AuthCode:
+      description: OAuth2 authorization scheme for production endpoint (Authorization Code grant)
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: 'https://login.wolterskluwer.eu/as/authorization.oauth2?pfidpadapterid=JurionCompositeAdapter&prompt=login'
+          tokenUrl: 'https://login.wolterskluwer.eu/as/token.oauth2'
+          scopes: {}

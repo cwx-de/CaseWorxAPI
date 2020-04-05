@@ -1,12 +1,22 @@
 # Change Log
 ------------
 
+## CaseWorx API v0.3.4
+----------------------
+
+### Added
+- Restructured API definition
+- Added delete operations on a case and a document
+- Added suport for partial upload and download
+
+### Changed
+- Simple media upload/download request size limit decreased to 4MB
+- Refined restrictions on case and document IDs
+
 ## CaseWorx API v0.0.6
 ----------------------
 
 ### Added
----------
-
 - OAuth2 Authorization Code grant flow support
 - API key support
 - List all cases

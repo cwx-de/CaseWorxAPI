@@ -1,0 +1,211 @@
+openapi: 3.0.0
+info:
+  title: CaseWorx API - Document Domain
+  description: |
+    [CaseWorx](https://app.caseworx-baurecht.de/) API - Document Domain describing components of the case
+  version: '0.0.1'
+  license: 
+    name: GNU Affero General Public License v3.0
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+  contact:
+    name: CaseWorx Support
+    email: caseworx@wolterskluwer.com
+
+components:
+  schemas:
+    DocumentRaw:
+      description: Properties of original (not enriched) document 
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          description: Internal ID of the document
+          type: integer
+          format: int64
+          minimum: 0
+          readOnly: true
+          example: 67890
+        filename:
+          description: Filename under which the document's media have been registered during upload
+          type: string
+          readOnly: true
+          example: 'mySampleFile.pdf'
+        created:
+          description: Document creation timestamp
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2020-01-18T18:00:00Z'
+        updated:
+          description: Document last update timestamp
+          type: string
+          format: date-time
+          readOnly: true
+          example: '2020-01-18T18:00:00Z'
+
+    Document:
+      description: Properties of an enriched document resource
+      allOf:
+        - $ref: '#/components/schemas/DocumentRaw'
+        - type: object
+          description: Properties of a document resource
+          required:
+            - title
+            - date
+            - types
+          properties:
+            id:
+              description: Internal ID of the document
+              type: integer
+              readOnly: true
+              example: 67890
+            filename:
+              description: Filename under which the document's media have been registered during upload
+              type: string
+              readOnly: true
+              example: 'mySampleFile.pdf'
+            created:
+              description: Document creation timestamp
+              type: string
+              format: date-time
+              readOnly: true
+              example: '2020-01-18T18:00:00Z'
+            updated:
+              description: Document last update timestamp
+              type: string
+              format: date-time
+              readOnly: true
+              example: '2020-01-18T18:00:00Z'
+            title:
+              description: Document title / Dokumenttitel
+              type: string
+              minLength: 1
+              example: 'My test document title'
+            date:
+              description: Document date coordinate in the case timeline / Datum
+              type: string
+              format: date
+              example: '2019-12-01'
+            types:
+              description: |
+                A collection of document types / Dokumententyp  
+                A document requires minimum one type. Types must be unique.  
+              type: array
+              items:
+                type: string
+                minLength: 1
+              uniqueItems: true
+              minItems: 1
+              maxItems: 500
+              example:
+                - 'Fax'
+                - 'Complaint'
+            parties:
+              description: |
+                A collection of parties associated with a document / Beteiligte  
+                Parties must be unique.
+              type: array
+              items:
+                type: string
+                minLength: 1
+              uniqueItems: true
+              maxItems: 500
+              example:
+                - 'John Doe'
+                - 'Acme Corp.'
+            trades:
+              description: |
+                A collection of technical trades associated with a document / Gewerk  
+                Trades must be unique.
+              type: array
+              items:
+                type: string
+                minLength: 1
+              uniqueItems: true
+              maxItems: 500
+              example:
+                - 'plumbing'
+                - 'masonery'
+            defects:
+              description: |
+                A collection of defects associated with a document / Mängel  
+                Defects must be unique.
+              type: array
+              items:
+                type: integer
+                minLength: 1
+              uniqueItems: true
+              maxItems: 500
+              example:
+                - 122562
+                - 122680
+            tags:
+              description: |
+                A collection of tags associated with a document / Eigene Schlagworte  
+                Tags must be unique.
+              type: array
+              items:
+                type: string
+                minLength: 1
+              uniqueItems: true
+              maxItems: 500
+              example:
+                - 'to do'
+                - 'easy win'
+            suggestions:
+              description: Automatically recognized values of document metadata
+              type: object
+              properties:
+                defects:
+                  description: |
+                    A collection of defects associated with a document / Mängel  
+                    Defects must be unique.
+                  type: object
+                  properties:
+                    descriptions:
+                      type: array
+                      items:
+                        type: string
+                      uniqueItems: true
+                      maxItems: 500
+                    identifiers:
+                      type: array
+                      items:
+                        type: string
+                      uniqueItems: true
+                      maxItems: 500
+                    refs:
+                      description: An array of references to defect identifiers 
+                      type: array
+                      items:
+                        type: integer
+                      uniqueItems: true
+                      maxItems: 500
+                  items:
+                    type: string
+                    minLength: 1
+                  uniqueItems: true
+                  maxItems: 500
+                  example:
+                    descriptions:
+                      - Mangel Nr. 122562
+                      - Mangel Nr. 122680
+                    identifiers:
+                      - "122562"
+                      - "122680"
+                    refs:
+                      - 12345
+                      - 67890
+
+  parameters:
+    DocumentId:
+      name: documentId
+      description: Document identifier
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 0
+      example: 67890
