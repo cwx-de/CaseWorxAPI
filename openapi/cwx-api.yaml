@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: "0.3.4"
+  version: "0.4.0"
   title: 'CaseWorx API'
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API
@@ -16,13 +16,12 @@ tags:
     description: Operations on document resources
   - name: media
     description: Operations on document media (aka the body of the document as opposed to metadata)
+  - name: changes
+    description: Operations on changes (aka audit log)
   
 security: 
   - apiKeyAuth: []
-  - oAuth2AuthCodePrd: []
-  - oAuth2AuthCodeNonPrd: []
-  - oAuth2RopcPrd: []
-  - oAuth2RopcNonPrd: []
+  - oAuth2AuthCode: []
 
 paths:
   /cases:
@@ -92,6 +91,12 @@ paths:
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error404'
         '500':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
+
+  /cases/changes:
+    $ref: 'cwx-change-domain.yaml#/components/pathitems/Changes'
+    
+  /cases/changes/startPageToken:
+    $ref: 'cwx-change-domain.yaml#/components/pathitems/StartPageToken'
 
   /cases/{caseId}/documents:
     parameters:
@@ -221,6 +226,7 @@ paths:
       description: |
         Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.  
       parameters:
+        - $ref: 'cwx-media-domain.yaml#/components/parameters/LayerQueryRef'
         - $ref: 'cwx-media-domain.yaml#/components/parameters/Accept'
         - $ref: 'cwx-media-domain.yaml#/components/parameters/Range'
 
@@ -279,16 +285,17 @@ paths:
       description: |
         Use an upload manager with the specified ID to exceute uploads of a document media part.  
         The client must ensure that the last part is only uploaded when all previous uploads have finished successfully.
+      
       parameters:
         - $ref: 'cwx-media-domain.yaml#/components/parameters/ContentLength'
         - $ref: 'cwx-media-domain.yaml#/components/parameters/ContentRange'
         - $ref: 'cwx-media-domain.yaml#/components/parameters/PartialUploadContentType'
 
       responses:
-        '201':
-          $ref: 'cwx-media-domain.yaml#/components/responses/PartialUploadFinishedOK'
+#        '201':
+#          $ref: 'cwx-media-domain.yaml#/components/responses/PartialUploadFinishedOK'
         '202':
-          description: Delivered part of the media object has been successfully uploaded. Client is expected to continue upload of the remaining parts.
+          description: Delivered part of the media object has been successfully uploaded. When all parts of the media resource have been uploaded, the resource will be automatically assembled. Client is expected to manage the upload and determine when all parts have been successfully uploaded.
         '400':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
         '401':
@@ -306,6 +313,12 @@ paths:
         '500':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
 
+  /changes:
+    $ref: 'cwx-change-domain.yaml#/components/pathitems/Changes'
+
+  /changes/startPageToken:
+    $ref: 'cwx-change-domain.yaml#/components/pathitems/StartPageToken'
+
 components:
   securitySchemes:
     apiKeyAuth:
@@ -317,6 +330,6 @@ components:
       type: oauth2
       flows:
         authorizationCode:
-          authorizationUrl: 'https://login.wolterskluwer.eu/as/authorization.oauth2?pfidpadapterid=JurionCompositeAdapter&prompt=login'
+          authorizationUrl: 'https://login.wolterskluwer.eu/as/authorization.oauth2?pfidpadapterid=JurionCompositeAdapter'
           tokenUrl: 'https://login.wolterskluwer.eu/as/token.oauth2'
           scopes: {}

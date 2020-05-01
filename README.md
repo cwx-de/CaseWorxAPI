@@ -11,6 +11,7 @@
 OpenAPI 3.0 specification:
 - openapi/cwx-api.yaml
 - openapi/cwx-case-domain.yaml
+- openapi/cwx-change-domain.yaml
 - openapi/cwx-commons-domain.yaml
 - openapi/cwx-document-domain.yaml
 - openapi/cwx-media-domain.yaml
@@ -22,7 +23,7 @@ Resolved:
 ----------------
 
 API reference documentation is available from the SwaggerHub: 
-[https://app.swaggerhub.com/apis/CaseWorx/CwxAPI/0.3.4](https://app.swaggerhub.com/apis/CaseWorx/CwxAPI/0.3.4)
+[https://app.swaggerhub.com/apis/CaseWorx/CwxAPI/0.4.0](https://app.swaggerhub.com/apis/CaseWorx/CwxAPI/0.4.0)
 
 ## Tools
 --------

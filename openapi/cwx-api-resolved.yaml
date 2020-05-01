@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 0.3.4
+  version: 0.4.0
   title: CaseWorx API
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API
@@ -14,12 +14,11 @@ tags:
     description: Operations on document resources
   - name: media
     description: Operations on document media (aka the body of the document as opposed to metadata)
+  - name: changes
+    description: Operations on changes (aka audit log)
 security:
   - apiKeyAuth: []
-  - oAuth2AuthCodePrd: []
-  - oAuth2AuthCodeNonPrd: []
-  - oAuth2RopcPrd: []
-  - oAuth2RopcNonPrd: []
+  - oAuth2AuthCode: []
 paths:
   /cases:
     get:
@@ -224,6 +223,10 @@ paths:
                 $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
         '500':
           $ref: '#/paths/~1cases/get/responses/500'
+  /cases/changes:
+    $ref: '#/paths/~1changes'
+  /cases/changes/startPageToken:
+    $ref: '#/paths/~1changes~1startPageToken'
   '/cases/{caseId}/documents':
     parameters:
       - $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0'
@@ -660,6 +663,20 @@ paths:
       description: |
         Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.  
       parameters:
+        - name: layer
+          description: 'An indication of the media layer. If omitted, it defaults to `unified`.'
+          in: query
+          schema:
+            description: Indicates media layer
+            readOnly: true
+            type: string
+            enum:
+              - original
+              - unified
+            default: unified
+            example: original
+          required: true
+          example: original
         - name: accept
           description: |
             a [list of media types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) the client is willing to accept. If Accept is not specified, defaults to \*/*.  
@@ -668,7 +685,7 @@ paths:
             type: string
           example: application/pdf
         - name: range
-          description: 'Specifies the start and end position of bytes to be provided. When the total size of the media is greater than 4.5MB the client must retrieve the resource using range requests. See [RFC2616 sec. 14.35](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35). The value provided in this header must specify both first-byte-pos and last-byte-pos and cannot request multipart ranges. If it is omitted and the response payload size exceeds the 4.5MB limit HTTP 500 is thrown.'
+          description: 'Specifies the start and end position of bytes to be provided. When the total size of the media is greater than 4 MB (4194304 bytes) the client must retrieve the resource using range requests. See [RFC2616 sec. 14.35](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35). The value provided in this header must specify both first-byte-pos and last-byte-pos and cannot request multipart ranges. If it is omitted and the response payload size exceeds the 4 MB limit HTTP 500 is thrown.'
           in: header
           schema:
             type: string
@@ -876,17 +893,8 @@ paths:
           required: true
           example: application/octet-stream
       responses:
-        '201':
-          description: 'Delivered part of the media object has been successfully uploaded. Based on the indications in the Content-Range headers the implementation has determined that all parts of the media object have been successfully received. The parts have been assembled, resulting document resource has been successfully created. The URL of the created document resource is returned in the Location header. The upload manager resource has been terminated and must not be used any longer.'
-          headers:
-            location:
-              description: URL of the created document resource
-              schema:
-                type: string
-                example: 'https://api.caseworx-baurecht.de/v0/cases/12345/documents/567890'
-              required: true
         '202':
-          description: Delivered part of the media object has been successfully uploaded. Client is expected to continue upload of the remaining parts.
+          description: 'Delivered part of the media object has been successfully uploaded. When all parts of the media resource have been uploaded, the resource will be automatically assembled. Client is expected to manage the upload and determine when all parts have been successfully uploaded.'
         '400':
           $ref: '#/paths/~1cases/get/responses/400'
         '401':
@@ -922,6 +930,138 @@ paths:
                 $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
         '500':
           $ref: '#/paths/~1cases/get/responses/500'
+  /changes:
+    get:
+      tags:
+        - changes
+      description: |
+        Returns a list of changes starting from the provided page token and the next page token.  
+        Note that each resource maintains its own set of page tokens and they in principle cannot be used interchangeably.  
+        Only a token received together with a response to poll all changes can be used when requesting a changes to a specific 
+        resource.
+      parameters:
+        - name: pageToken
+          description: The page token indicating temporal scope of the request
+          in: query
+          schema:
+            $ref: '#/paths/~1uploads~1%7BuploadId%7D/parameters/0/schema'
+      responses:
+        '200':
+          description: |
+            Returns list of changes relevant for the user indicated by the access token in the timeframe indicated by 
+            the page token. That is, the changes that occurred between the page token was generated and the request 
+            resulting in this response has been received.
+          content:
+            application/json:
+              schema:
+                description: Response object containing next page token and list of changes
+                type: object
+                required:
+                  - nextPageToken
+                  - changes
+                properties:
+                  nextPageToken:
+                    $ref: '#/paths/~1uploads~1%7BuploadId%7D/parameters/0/schema'
+                  changes:
+                    description: List of changes that have occurred since the page token used in the request was generated
+                    type: array
+                    items:
+                      description: |
+                        An object describing an atomic change to the state of the resource. This record should be interpreted as:  
+                        A _subject_ has performed an _action_ on an _object_  
+                        where:  
+                        _subject_ is indicated by `subId` (not delivered in the response)  
+                        _action_ is indicated by `action`  
+                        _object_ may be indicated by:  
+                        (`target`, `caseId`) if _object_ is a case  
+                        (`target`, `caseId`, `docId`) if _object_ is a document  
+                        (`target`, `caseId`, `docId`, `layer`) if _object_ is a document media  
+                        (`target`, `caseId`, `userId`) if _object_ is ACL  
+                      type: object
+                      required:
+                        - action
+                        - target
+                        - caseId
+                      properties:
+                        action:
+                          description: An indication of the type of change
+                          type: string
+                          enum:
+                            - create
+                            - delete
+                            - update
+                        target:
+                          description: Indicates which feature of a resource is affected by the change
+                          type: string
+                          enum:
+                            - metadata
+                            - media
+                            - acl
+                        layer:
+                          description: Indicates media layer
+                          readOnly: true
+                          type: string
+                          enum:
+                            - original
+                            - unified
+                          default: unified
+                          example: original
+                        caseId:
+                          $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0/schema'
+                        docId:
+                          $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0/schema'
+                        userId:
+                          $ref: '#/paths/~1uploads~1%7BuploadId%7D/parameters/0/schema'
+              examples:
+                list:
+                  description: Sample response to a request for changes
+                  value:
+                    nextPageToken: djijndinwhywdmwk
+                    changes:
+                      - action: create
+                        target: metadata
+                        caseId: 12345
+                      - action: create
+                        target: media
+                        layer: original
+                        caseId: 12345
+                        docId: 67890
+                      - action: update
+                        target: acl
+                        caseId: 12345
+                        userId: hsi92dk9
+        '400':
+          $ref: '#/paths/~1cases/get/responses/400'
+        '401':
+          $ref: '#/paths/~1cases/get/responses/401'
+        '403':
+          $ref: '#/paths/~1cases/get/responses/403'
+        '500':
+          $ref: '#/paths/~1cases/get/responses/500'
+  /changes/startPageToken:
+    get:
+      tags:
+        - changes
+      description: |
+        Returns start page token to navigate through changes.  
+        Note that each resource maintains its own set of page tokens and they cannot be used interchangeably.  
+        Only a token received together with a response to poll all changes can be used when requesting a changes to a specific 
+        resource.
+      responses:
+        '200':
+          description: Returns start page token
+          content:
+            application/json:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/parameters/0/schema'
+        '400':
+          $ref: '#/paths/~1cases/get/responses/400'
+        '401':
+          $ref: '#/paths/~1cases/get/responses/401'
+        '403':
+          $ref: '#/paths/~1cases/get/responses/403'
+        '500':
+          $ref: '#/paths/~1cases/get/responses/500'
 components:
   securitySchemes:
     apiKeyAuth:
@@ -933,6 +1073,6 @@ components:
       type: oauth2
       flows:
         authorizationCode:
-          authorizationUrl: 'https://login.wolterskluwer.eu/as/authorization.oauth2?pfidpadapterid=JurionCompositeAdapter&prompt=login'
+          authorizationUrl: 'https://login.wolterskluwer.eu/as/authorization.oauth2?pfidpadapterid=JurionCompositeAdapter'
           tokenUrl: 'https://login.wolterskluwer.eu/as/token.oauth2'
           scopes: {}

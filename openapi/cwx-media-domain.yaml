@@ -3,7 +3,7 @@ info:
   title: CaseWorx API - Media Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Media Domain describing shared components of the API
-  version: '0.0.1'
+  version: "0.0.2"
   license: 
     name: GNU Affero General Public License v3.0
     url: https://www.gnu.org/licenses/agpl-3.0.html
@@ -139,7 +139,7 @@ components:
 
     Range:
       name: range
-      description: Specifies the start and end position of bytes to be provided. When the total size of the media is greater than 4.5MB the client must retrieve the resource using range requests. See [RFC2616 sec. 14.35](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35). The value provided in this header must specify both first-byte-pos and last-byte-pos and cannot request multipart ranges. If it is omitted and the response payload size exceeds the 4.5MB limit HTTP 500 is thrown.
+      description: Specifies the start and end position of bytes to be provided. When the total size of the media is greater than 4 MB (4194304 bytes) the client must retrieve the resource using range requests. See [RFC2616 sec. 14.35](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35). The value provided in this header must specify both first-byte-pos and last-byte-pos and cannot request multipart ranges. If it is omitted and the response payload size exceeds the 4 MB limit HTTP 500 is thrown.
       in: header
       schema:
         type: string

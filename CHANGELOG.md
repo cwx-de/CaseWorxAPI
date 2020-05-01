@@ -1,6 +1,16 @@
 # Change Log
 ------------
 
+## CaseWorx API v0.4.0
+----------------------
+
+### Added
+- Added endpoints supporting audit log retrieval
+- Add the parameter to select download of a specific media layer
+
+### Changed
+- Partial upload is always asynchronous, removed HTTP 201 response
+
 ## CaseWorx API v0.3.4
 ----------------------
 
