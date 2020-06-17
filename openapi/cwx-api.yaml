@@ -1,7 +1,15 @@
 openapi: 3.0.0
 info:
-  version: "0.4.0"
+  version: "0.5.0"
   title: 'CaseWorx API'
+  termsOfService: https://www.wolterskluwer-online.de/informationen/datenschutz
+  contact: 
+    name: Wolters Kluwer Deutschland GmbH
+    url: https://www.caseworx-baurecht.de/informationen/kontakt
+    email: caseworx@wolterskluwer.com
+  license:
+    name: GNU Affero General Public License version 3
+    url: https://www.gnu.org/licenses/agpl-3.0.html
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API
 
@@ -25,6 +33,9 @@ security:
 
 paths:
   /cases:
+    parameters:
+      - $ref: 'cwx-commons-domain.yaml#/components/parameters/CorrelationId'
+
     # -------- List cases --------
     get:
       tags: 
@@ -33,6 +44,9 @@ paths:
       responses:
         '200':
           description: Returns an array of cases
+          headers:
+            x-cwx-cid:
+              $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
           content:
             application/json:
               schema:
@@ -45,6 +59,8 @@ paths:
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
         '403':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
+        '429':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error429'
         '500':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
 
@@ -64,12 +80,15 @@ paths:
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
         '403':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
+        '429':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error429'
         '500':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
 
   /cases/{caseId}:
     parameters:
       - $ref: 'cwx-case-domain.yaml#/components/parameters/CaseId'
+      - $ref: 'cwx-commons-domain.yaml#/components/parameters/CorrelationId'
 
     # -------- Delete a case --------
     delete:
@@ -81,6 +100,9 @@ paths:
           $ref: 'cwx-commons-domain.yaml#/components/responses/Info202'
         '204':
           description: Confirms that the operation has been executed successfully
+          headers:
+            x-cwx-cid:
+              $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'          
         '400':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
         '401':
@@ -89,6 +111,8 @@ paths:
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
         '404':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error404'
+        '429':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error429'
         '500':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
 
@@ -101,6 +125,8 @@ paths:
   /cases/{caseId}/documents:
     parameters:
       - $ref: 'cwx-case-domain.yaml#/components/parameters/CaseId'
+      - $ref: 'cwx-commons-domain.yaml#/components/parameters/CorrelationId'
+
 
     # -------- List selected properties of all documents in a case --------
     get:
@@ -110,6 +136,9 @@ paths:
       responses:
         '200':
           description: Returns an array of documents in a case with available properties
+          headers:
+            x-cwx-cid:
+              $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
           content:
             application/json:
               schema:
@@ -126,6 +155,8 @@ paths:
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
         '404':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error404'
+        '429':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error429'
         '500':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
 
@@ -159,6 +190,8 @@ paths:
           $ref: 'cwx-media-domain.yaml#/components/responses/Error413'
         '415':
           $ref: 'cwx-media-domain.yaml#/components/responses/Error415'
+        '429':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error429'
         '500':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
 
@@ -166,6 +199,7 @@ paths:
     parameters:
       - $ref: 'cwx-case-domain.yaml#/components/parameters/CaseId'
       - $ref: 'cwx-document-domain.yaml#/components/parameters/DocumentId'
+      - $ref: 'cwx-commons-domain.yaml#/components/parameters/CorrelationId'
 
     # -------- Get document metadata --------
     get:
@@ -175,6 +209,9 @@ paths:
       responses:
         '200':
           description: Returns properties of a document
+          headers:
+            x-cwx-cid:
+              $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
           content:
             application/json:
               schema:
@@ -190,6 +227,8 @@ paths:
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
         '404':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error404'
+        '429':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error429'
         '500':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
 
@@ -203,6 +242,9 @@ paths:
           $ref: 'cwx-commons-domain.yaml#/components/responses/Info202'
         '204':
           description: Confirms that the operation has been executed successfully
+          headers:
+            x-cwx-cid:
+              $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
         '400':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
         '401':
@@ -211,6 +253,8 @@ paths:
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
         '404':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error404'
+        '429':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error429'
         '500':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
 
@@ -218,13 +262,14 @@ paths:
     parameters:
       - $ref: 'cwx-case-domain.yaml#/components/parameters/CaseId'
       - $ref: 'cwx-document-domain.yaml#/components/parameters/DocumentId'
+      - $ref: 'cwx-commons-domain.yaml#/components/parameters/CorrelationId'
 
     # -------- Download a document media --------
     get:
       tags: 
         - media
       description: |
-        Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.  
+        Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.
       parameters:
         - $ref: 'cwx-media-domain.yaml#/components/parameters/LayerQueryRef'
         - $ref: 'cwx-media-domain.yaml#/components/parameters/Accept'
@@ -249,10 +294,15 @@ paths:
           $ref: 'cwx-media-domain.yaml#/components/responses/Error406'
         '416':
           $ref: 'cwx-media-domain.yaml#/components/responses/Error416'
+        '429':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error429'
         '500':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
 
   /uploads:
+    parameters:
+      - $ref: 'cwx-commons-domain.yaml#/components/parameters/CorrelationId'
+
     post:
       tags:
         - media
@@ -272,12 +322,15 @@ paths:
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
         '403':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
+        '429':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error429'
         '500':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
 
   /uploads/{uploadId}:
     parameters:
       - $ref: 'cwx-media-domain.yaml#/components/parameters/UploadManagerId'
+      - $ref: 'cwx-commons-domain.yaml#/components/parameters/CorrelationId'
 
     put:
       tags:
@@ -285,15 +338,12 @@ paths:
       description: |
         Use an upload manager with the specified ID to exceute uploads of a document media part.  
         The client must ensure that the last part is only uploaded when all previous uploads have finished successfully.
-      
       parameters:
         - $ref: 'cwx-media-domain.yaml#/components/parameters/ContentLength'
         - $ref: 'cwx-media-domain.yaml#/components/parameters/ContentRange'
         - $ref: 'cwx-media-domain.yaml#/components/parameters/PartialUploadContentType'
 
       responses:
-#        '201':
-#          $ref: 'cwx-media-domain.yaml#/components/responses/PartialUploadFinishedOK'
         '202':
           description: Delivered part of the media object has been successfully uploaded. When all parts of the media resource have been uploaded, the resource will be automatically assembled. Client is expected to manage the upload and determine when all parts have been successfully uploaded.
         '400':
@@ -310,6 +360,8 @@ paths:
           $ref: 'cwx-media-domain.yaml#/components/responses/Error413'
         '415':
           $ref: 'cwx-media-domain.yaml#/components/responses/Error415'
+        '429':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error429'
         '500':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
 
@@ -326,10 +378,12 @@ components:
       in: header
       name: x-api-key
     oAuth2AuthCode:
-      description: OAuth2 authorization scheme for production endpoint (Authorization Code grant)
       type: oauth2
       flows:
         authorizationCode:
           authorizationUrl: 'https://login.wolterskluwer.eu/as/authorization.oauth2?pfidpadapterid=JurionCompositeAdapter'
           tokenUrl: 'https://login.wolterskluwer.eu/as/token.oauth2'
-          scopes: {}
+          scopes:
+            openid: set OpenID context
+            profile: OpenID profile
+            urn:wkde:cwx:api: CaseWorx API scope

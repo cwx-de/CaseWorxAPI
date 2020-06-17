@@ -3,13 +3,14 @@ info:
   title: CaseWorx API - Case Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Case Domain describing components of the case
-  version: '0.0.1'
-  license: 
-    name: GNU Affero General Public License v3.0
-    url: https://www.gnu.org/licenses/agpl-3.0.html
-  contact:
-    name: CaseWorx Support
+  version: "0.1.0"
+  contact: 
+    name: Wolters Kluwer Deutschland GmbH
+    url: https://www.caseworx-baurecht.de/informationen/kontakt
     email: caseworx@wolterskluwer.com
+  license:
+    name: GNU Affero General Public License version 3
+    url: https://www.gnu.org/licenses/agpl-3.0.html
 
 components:
   schemas:
@@ -57,7 +58,7 @@ components:
           example: 'John Doe'
         description:
           description: |
-            Description of a case / Kurzbeschreibung
+            Description of a case / Kurzbeschreibung  
           type: string
           minLength: 1
           maxLength: 300
@@ -85,7 +86,7 @@ components:
       in: path
       required: true
       schema:
-        $ref: 'cwx-commons-domain.yaml#/components/schemas/ResourceId'
+        $ref: 'https://api.swaggerhub.com/domains/CaseWorx/CwxCommonsDomain/0.0.1#/components/schemas/ResourceId'
       example: 12345
 
     CaseQueryRef:
@@ -95,7 +96,7 @@ components:
       in: query
       required: true
       schema:
-        $ref: 'cwx-commons-domain.yaml#/components/schemas/ResourceId'
+        $ref: 'https://api.swaggerhub.com/domains/CaseWorx/CwxCommonsDomain/0.0.1#/components/schemas/ResourceId'
       example: 12345
   
   requestBodies:
@@ -109,8 +110,10 @@ components:
   responses:
     CaseCreatedOK:
       description: |
-        New case item successfully added.
+        New case item successfully added.  
       headers:
+        x-cwx-cid:
+          $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
         location:
           description: URL of the created resource
           schema:

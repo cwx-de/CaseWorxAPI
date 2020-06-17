@@ -1,7 +1,15 @@
 openapi: 3.0.0
 info:
-  version: 0.4.0
+  version: 0.5.0
   title: CaseWorx API
+  termsOfService: 'https://www.wolterskluwer-online.de/informationen/datenschutz'
+  contact:
+    name: Wolters Kluwer Deutschland GmbH
+    url: 'https://www.caseworx-baurecht.de/informationen/kontakt'
+    email: caseworx@wolterskluwer.com
+  license:
+    name: GNU Affero General Public License version 3
+    url: 'https://www.gnu.org/licenses/agpl-3.0.html'
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API
 servers:
@@ -21,6 +29,17 @@ security:
   - oAuth2AuthCode: []
 paths:
   /cases:
+    parameters:
+      - name: x-cwx-cid
+        description: Correlation ID
+        in: header
+        required: false
+        schema:
+          description: Universal ID to be used unless specific validation restrictions are needed
+          type: string
+          maxLength: 50
+          example: b50ef924-2c29-4097-904b-ab2fb286e3bb
+        example: b50ef924-2c29-4097-904b-ab2fb286e3bb
     get:
       tags:
         - cases
@@ -28,6 +47,13 @@ paths:
       responses:
         '200':
           description: Returns an array of cases
+          headers:
+            x-cwx-cid:
+              description: Correlation ID
+              required: false
+              schema:
+                $ref: '#/paths/~1cases/parameters/0/schema'
+              example: b50ef924-2c29-4097-904b-ab2fb286e3bb
           content:
             application/json:
               schema:
@@ -76,7 +102,7 @@ paths:
                       example: John Doe
                     description:
                       description: |
-                        Description of a case / Kurzbeschreibung
+                        Description of a case / Kurzbeschreibung  
                       type: string
                       minLength: 1
                       maxLength: 300
@@ -100,6 +126,9 @@ paths:
           description: |
             Bad request  
             All otherwise unhandled client-side errors. Check the request parameters.
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
           content:
             application/json:
               schema:
@@ -124,6 +153,9 @@ paths:
             Unauthorized  
             Check access token. The token might be invalid or might have expired.  
             Sent when the identity of the user cannot be established (including cases when the token cannot be trusted)
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
           content:
             application/json:
               schema:
@@ -133,14 +165,24 @@ paths:
             Forbidden  
             The user for whom the access token was issued cannot access requested resource. Check access rights of the user.  
             Sent when the identity of the user has been established and the user has not been granted permission to access the resource.
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
           content:
             application/json:
               schema:
                 $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+        '429':
+          description: |
+            Too Many Requests  
+            An indication that the client has exceeded its request quota. Upon catching such exceptions, the client can resubmit the failed request in a way that is rate limiting, while complying with the API throttling limits associated with its usage plan.  
         '500':
           description: |
             Internal server error  
             All unhandled server-side errors
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
           content:
             application/json:
               schema:
@@ -158,8 +200,10 @@ paths:
       responses:
         '201':
           description: |
-            New case item successfully added.
+            New case item successfully added.  
           headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
             location:
               description: URL of the created resource
               schema:
@@ -171,6 +215,8 @@ paths:
           $ref: '#/paths/~1cases/get/responses/401'
         '403':
           $ref: '#/paths/~1cases/get/responses/403'
+        '429':
+          $ref: '#/paths/~1cases/get/responses/429'
         '500':
           $ref: '#/paths/~1cases/get/responses/500'
   '/cases/{caseId}':
@@ -186,6 +232,7 @@ paths:
           minimum: 0
           example: 12345
         example: 12345
+      - $ref: '#/paths/~1cases/parameters/0'
     delete:
       tags:
         - cases
@@ -196,6 +243,9 @@ paths:
             Resource not ready  
             Requested resource exists but it has not yet reached the state in its lifecycle where the requested criteria are satisfied. It may or may not reach this state in the future.  
             In requests changing state of a resource it means that the request has been accepted but not acted upon yet. It may or may not be in the future.
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
           content:
             application/json:
               schema:
@@ -206,6 +256,9 @@ paths:
                 hint: Requested resource exists but it has not yet reached the state in its lifecycle where the requested criteria are satisfied. It may or may not reach this state in the future.
         '204':
           description: Confirms that the operation has been executed successfully
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
         '400':
           $ref: '#/paths/~1cases/get/responses/400'
         '401':
@@ -217,10 +270,15 @@ paths:
             Not Found  
             Requested resource doesn't exist.  
             Check how do you obtain the resource IDsused. Case or document might have been deleted.
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
           content:
             application/json:
               schema:
                 $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+        '429':
+          $ref: '#/paths/~1cases/get/responses/429'
         '500':
           $ref: '#/paths/~1cases/get/responses/500'
   /cases/changes:
@@ -230,6 +288,7 @@ paths:
   '/cases/{caseId}/documents':
     parameters:
       - $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0'
+      - $ref: '#/paths/~1cases/parameters/0'
     get:
       tags:
         - documents
@@ -237,6 +296,9 @@ paths:
       responses:
         '200':
           description: Returns an array of documents in a case with available properties
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
           content:
             application/json:
               schema:
@@ -253,6 +315,8 @@ paths:
           $ref: '#/paths/~1cases/get/responses/403'
         '404':
           $ref: '#/paths/~1cases~1%7BcaseId%7D/delete/responses/404'
+        '429':
+          $ref: '#/paths/~1cases/get/responses/429'
         '500':
           $ref: '#/paths/~1cases/get/responses/500'
     post:
@@ -276,9 +340,6 @@ paths:
           in: header
           schema:
             description: Enumeration of supported content types that document media can be uploaded in
-            externalDocs:
-              description: Supported Media Types
-              url: 'https://confluence.wolterskluwer.io/display/WKBAUM/Supported+Media+Types'
             type: string
             enum:
               - application/pdf
@@ -400,6 +461,8 @@ paths:
         '201':
           description: Document resource created and media successfully uploaded for the document
           headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
             location:
               description: URL of the created document resource
               schema:
@@ -418,6 +481,8 @@ paths:
           $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/responses/413'
         '415':
           $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/responses/415'
+        '429':
+          $ref: '#/paths/~1cases/get/responses/429'
         '500':
           $ref: '#/paths/~1cases/get/responses/500'
   '/cases/{caseId}/documents/{documentId}':
@@ -432,6 +497,7 @@ paths:
           format: int64
           minimum: 0
         example: 67890
+      - $ref: '#/paths/~1cases/parameters/0'
     get:
       tags:
         - documents
@@ -439,6 +505,9 @@ paths:
       responses:
         '200':
           description: Returns properties of a document
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
           content:
             application/json:
               schema:
@@ -632,6 +701,8 @@ paths:
           $ref: '#/paths/~1cases/get/responses/403'
         '404':
           $ref: '#/paths/~1cases~1%7BcaseId%7D/delete/responses/404'
+        '429':
+          $ref: '#/paths/~1cases/get/responses/429'
         '500':
           $ref: '#/paths/~1cases/get/responses/500'
     delete:
@@ -643,6 +714,9 @@ paths:
           $ref: '#/paths/~1cases~1%7BcaseId%7D/delete/responses/202'
         '204':
           description: Confirms that the operation has been executed successfully
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
         '400':
           $ref: '#/paths/~1cases/get/responses/400'
         '401':
@@ -651,17 +725,20 @@ paths:
           $ref: '#/paths/~1cases/get/responses/403'
         '404':
           $ref: '#/paths/~1cases~1%7BcaseId%7D/delete/responses/404'
+        '429':
+          $ref: '#/paths/~1cases/get/responses/429'
         '500':
           $ref: '#/paths/~1cases/get/responses/500'
   '/cases/{caseId}/documents/{documentId}/media':
     parameters:
       - $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0'
       - $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents~1%7BdocumentId%7D/parameters/1'
+      - $ref: '#/paths/~1cases/parameters/0'
     get:
       tags:
         - media
       description: |
-        Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.  
+        Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.
       parameters:
         - name: layer
           description: 'An indication of the media layer. If omitted, it defaults to `unified`.'
@@ -694,6 +771,8 @@ paths:
         '200':
           description: Document media in binary format is returned in response payload with approriate headers.
           headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
             content-type:
               description: 'The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) of the content returned in payload'
               schema:
@@ -715,6 +794,8 @@ paths:
         '206':
           description: Partial content has been successfully delivered. It means that requested range is satisfied and Content-Range indicates the actual content range delivered. This response will also be delivered in case requested range results in making the entire resource available.
           headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
             content-type:
               description: 'The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) of the original media whose part is returned in payload. At present only application/pdf can be downloaded.'
               schema:
@@ -757,6 +838,9 @@ paths:
             Not Acceptable  
             Content in required format is not available.  
             Accept header indicates a media type that is not available.
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
           content:
             application/json:
               schema:
@@ -766,13 +850,20 @@ paths:
             Requested range nof satisfiable  
             The partial download request specifies the range of bytes that cannot be satisfied. Range is considered satisfiable if the resource and range overlap - in this case HTTP 206 is returned and Content-Range header indicates the part of the resource that is delivered.
             Likely cause of this error is the first-byte-pos  greater than the entire length of resource. 
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
           content:
             application/json:
               schema:
                 $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+        '429':
+          $ref: '#/paths/~1cases/get/responses/429'
         '500':
           $ref: '#/paths/~1cases/get/responses/500'
   /uploads:
+    parameters:
+      - $ref: '#/paths/~1cases/parameters/0'
     post:
       tags:
         - media
@@ -814,6 +905,8 @@ paths:
         '201':
           description: Upload manager resource created and ready for the parts to be uploaded
           headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
             location:
               description: URL of the created upload manager resource
               schema:
@@ -845,6 +938,8 @@ paths:
           $ref: '#/paths/~1cases/get/responses/401'
         '403':
           $ref: '#/paths/~1cases/get/responses/403'
+        '429':
+          $ref: '#/paths/~1cases/get/responses/429'
         '500':
           $ref: '#/paths/~1cases/get/responses/500'
   '/uploads/{uploadId}':
@@ -853,12 +948,10 @@ paths:
         description: Id of the upload manager resource
         in: path
         schema:
-          description: Universal ID to be used unless specific validation restrictions are needed
-          type: string
-          maxLength: 50
-          example: 1234567
+          $ref: '#/paths/~1cases/parameters/0/schema'
         required: true
         example: wnxwnikxiuwu0u3jd
+      - $ref: '#/paths/~1cases/parameters/0'
     put:
       tags:
         - media
@@ -907,6 +1000,9 @@ paths:
           description: |
             Cannot establish request payload size  
             Content-Length header either not specified or invalid.
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
           content:
             application/json:
               schema:
@@ -915,6 +1011,9 @@ paths:
           description: |
             Request payload too large  
             The document body cannot be larger than 4MB (4194304 bytes). Partial upload to be implemented later.
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
           content:
             application/json:
               schema:
@@ -924,10 +1023,15 @@ paths:
             Unsupported Media Type  
             Content in required format is not available or cannot be accepted.  
             Content-Type header indicates a media type that is not supported.
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
           content:
             application/json:
               schema:
                 $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+        '429':
+          $ref: '#/paths/~1cases/get/responses/429'
         '500':
           $ref: '#/paths/~1cases/get/responses/500'
   /changes:
@@ -944,13 +1048,17 @@ paths:
           description: The page token indicating temporal scope of the request
           in: query
           schema:
-            $ref: '#/paths/~1uploads~1%7BuploadId%7D/parameters/0/schema'
+            $ref: '#/paths/~1cases/parameters/0/schema'
+        - $ref: '#/paths/~1cases/parameters/0'
       responses:
         '200':
           description: |
             Returns list of changes relevant for the user indicated by the access token in the timeframe indicated by 
             the page token. That is, the changes that occurred between the page token was generated and the request 
             resulting in this response has been received.
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
           content:
             application/json:
               schema:
@@ -961,7 +1069,7 @@ paths:
                   - changes
                 properties:
                   nextPageToken:
-                    $ref: '#/paths/~1uploads~1%7BuploadId%7D/parameters/0/schema'
+                    $ref: '#/paths/~1cases/parameters/0/schema'
                   changes:
                     description: List of changes that have occurred since the page token used in the request was generated
                     type: array
@@ -1007,11 +1115,15 @@ paths:
                           default: unified
                           example: original
                         caseId:
-                          $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0/schema'
+                          $ref: '#/paths/~1changes/get/responses/200/content/application~1json/schema/properties/changes/items/properties/docId'
                         docId:
-                          $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0/schema'
+                          description: 'Standard resource ID (case, document)'
+                          type: integer
+                          format: int64
+                          minimum: 0
+                          example: 12345
                         userId:
-                          $ref: '#/paths/~1uploads~1%7BuploadId%7D/parameters/0/schema'
+                          $ref: '#/paths/~1cases/parameters/0/schema'
               examples:
                 list:
                   description: Sample response to a request for changes
@@ -1036,6 +1148,8 @@ paths:
           $ref: '#/paths/~1cases/get/responses/401'
         '403':
           $ref: '#/paths/~1cases/get/responses/403'
+        '429':
+          $ref: '#/paths/~1cases/get/responses/429'
         '500':
           $ref: '#/paths/~1cases/get/responses/500'
   /changes/startPageToken:
@@ -1047,19 +1161,26 @@ paths:
         Note that each resource maintains its own set of page tokens and they cannot be used interchangeably.  
         Only a token received together with a response to poll all changes can be used when requesting a changes to a specific 
         resource.
+      parameters:
+        - $ref: '#/paths/~1cases/parameters/0'
       responses:
         '200':
           description: Returns start page token
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
           content:
             application/json:
               schema:
-                $ref: '#/paths/~1uploads~1%7BuploadId%7D/parameters/0/schema'
+                $ref: '#/paths/~1cases/parameters/0/schema'
         '400':
           $ref: '#/paths/~1cases/get/responses/400'
         '401':
           $ref: '#/paths/~1cases/get/responses/401'
         '403':
           $ref: '#/paths/~1cases/get/responses/403'
+        '429':
+          $ref: '#/paths/~1cases/get/responses/429'
         '500':
           $ref: '#/paths/~1cases/get/responses/500'
 components:
@@ -1069,10 +1190,12 @@ components:
       in: header
       name: x-api-key
     oAuth2AuthCode:
-      description: OAuth2 authorization scheme for production endpoint (Authorization Code grant)
       type: oauth2
       flows:
         authorizationCode:
           authorizationUrl: 'https://login.wolterskluwer.eu/as/authorization.oauth2?pfidpadapterid=JurionCompositeAdapter'
           tokenUrl: 'https://login.wolterskluwer.eu/as/token.oauth2'
-          scopes: {}
+          scopes:
+            openid: set OpenID context
+            profile: OpenID profile
+            'urn:wkde:cwx:api': CaseWorx API scope

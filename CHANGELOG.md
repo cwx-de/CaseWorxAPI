@@ -1,6 +1,18 @@
 # Change Log
 ------------
 
+## CaseWorx API v0.5.0
+----------------------
+
+### Added
+- added correlation ID header to improve traceability
+- added HTTP 429 response to all requests to accommodate throttling
+- added required OpenID scopes in security schema
+- upgrade CwxCommonsDomain to v0.1.0
+- upgrade CwxCaseDomain to v0.1.0
+- upgrade CwxChangeDomain to v0.1.0
+- upgrade CwxMediaDomain to v0.1.0
+
 ## CaseWorx API v0.4.0
 ----------------------
 

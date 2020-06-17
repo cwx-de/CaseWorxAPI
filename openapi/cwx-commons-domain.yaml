@@ -3,13 +3,14 @@ info:
   title: CaseWorx API - Commons Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Commons Domain describing shared components of the API
-  version: '0.0.1'
-  license: 
-    name: GNU Affero General Public License v3.0
-    url: https://www.gnu.org/licenses/agpl-3.0.html
-  contact:
-    name: CaseWorx Support
+  version: "0.1.0"
+  contact: 
+    name: Wolters Kluwer Deutschland GmbH
+    url: https://www.caseworx-baurecht.de/informationen/kontakt
     email: caseworx@wolterskluwer.com
+  license:
+    name: GNU Affero General Public License version 3
+    url: https://www.gnu.org/licenses/agpl-3.0.html
 
 components:
   schemas:
@@ -17,7 +18,7 @@ components:
       description: Universal ID to be used unless specific validation restrictions are needed
       type: string
       maxLength: 50
-      example: 1234567
+      example: b50ef924-2c29-4097-904b-ab2fb286e3bb
       
     ResourceId:
       description: Standard resource ID (case, document)
@@ -44,12 +45,25 @@ components:
       required: 
         - message
 
+  parameters:
+    CorrelationId:
+      name: x-cwx-cid
+      description: Correlation ID
+      in: header
+      required: false
+      schema:
+        $ref: '#/components/schemas/UniversalId'
+      example: b50ef924-2c29-4097-904b-ab2fb286e3bb
+
   responses:
     Info202:
       description: |
         Resource not ready  
         Requested resource exists but it has not yet reached the state in its lifecycle where the requested criteria are satisfied. It may or may not reach this state in the future.  
         In requests changing state of a resource it means that the request has been accepted but not acted upon yet. It may or may not be in the future.
+      headers:
+        x-cwx-cid:
+          $ref: '#/components/headers/x-cwx-cid'
       content:
         application/json:
           schema:
@@ -62,6 +76,9 @@ components:
       description: |
         Bad request  
         All otherwise unhandled client-side errors. Check the request parameters.
+      headers:
+        x-cwx-cid:
+          $ref: '#/components/headers/x-cwx-cid'
       content:
         application/json:
           schema:
@@ -71,6 +88,9 @@ components:
         Unauthorized  
         Check access token. The token might be invalid or might have expired.  
         Sent when the identity of the user cannot be established (including cases when the token cannot be trusted)
+      headers:
+        x-cwx-cid:
+          $ref: '#/components/headers/x-cwx-cid'
       content:
         application/json:
           schema:
@@ -80,6 +100,9 @@ components:
         Forbidden  
         The user for whom the access token was issued cannot access requested resource. Check access rights of the user.  
         Sent when the identity of the user has been established and the user has not been granted permission to access the resource.
+      headers:
+        x-cwx-cid:
+          $ref: '#/components/headers/x-cwx-cid'
       content:
         application/json:
           schema:
@@ -89,15 +112,33 @@ components:
         Not Found  
         Requested resource doesn't exist.  
         Check how do you obtain the resource IDsused. Case or document might have been deleted.
+      headers:
+        x-cwx-cid:
+          $ref: '#/components/headers/x-cwx-cid'
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+    Error429:
+      description: |
+        Too Many Requests  
+        An indication that the client has exceeded its request quota. Upon catching such exceptions, the client can resubmit the failed request in a way that is rate limiting, while complying with the API throttling limits associated with its usage plan.  
     Error500:
       description: |
         Internal server error  
         All unhandled server-side errors
+      headers:
+        x-cwx-cid:
+          $ref: '#/components/headers/x-cwx-cid'
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+
+  headers:
+    x-cwx-cid:
+      description: Correlation ID
+      required: false
+      schema:
+        $ref: '#/components/schemas/UniversalId'
+      example: b50ef924-2c29-4097-904b-ab2fb286e3bb

@@ -3,13 +3,14 @@ info:
   title: CaseWorx API - Media Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Media Domain describing shared components of the API
-  version: "0.0.2"
-  license: 
-    name: GNU Affero General Public License v3.0
-    url: https://www.gnu.org/licenses/agpl-3.0.html
-  contact:
-    name: CaseWorx Support
+  version: "0.1.0"
+  contact: 
+    name: Wolters Kluwer Deutschland GmbH
+    url: https://www.caseworx-baurecht.de/informationen/kontakt
     email: caseworx@wolterskluwer.com
+  license:
+    name: GNU Affero General Public License version 3
+    url: https://www.gnu.org/licenses/agpl-3.0.html
 
 components:
   schemas:
@@ -25,9 +26,6 @@ components:
       
     SupportedMediaTypes:
       description: Enumeration of supported content types that document media can be uploaded in
-      externalDocs:
-        description: Supported Media Types
-        url: https://confluence.wolterskluwer.io/display/WKBAUM/Supported+Media+Types
       type: string
       enum:
         - application/pdf
@@ -267,6 +265,8 @@ components:
     SimpleMediaUploadOK:
       description: Document resource created and media successfully uploaded for the document
       headers:
+        x-cwx-cid:
+          $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
         location:
           description: URL of the created document resource
           schema:
@@ -277,6 +277,8 @@ components:
     SimpleMediaDownloadOK:
       description: Document media in binary format is returned in response payload with approriate headers.
       headers:
+        x-cwx-cid:
+          $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
         content-type:
           description: The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) of the content returned in payload
           schema:
@@ -296,6 +298,8 @@ components:
     PartialMediaDownloadOK:
       description: Partial content has been successfully delivered. It means that requested range is satisfied and Content-Range indicates the actual content range delivered. This response will also be delivered in case requested range results in making the entire resource available.
       headers:
+        x-cwx-cid:
+          $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
         content-type:
           description: The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) of the original media whose part is returned in payload. At present only application/pdf can be downloaded.
           schema:
@@ -329,6 +333,8 @@ components:
     UploadManagerCreatedOK:
       description: Upload manager resource created and ready for the parts to be uploaded
       headers:
+        x-cwx-cid:
+          $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
         location:
           description: URL of the created upload manager resource
           schema:
@@ -350,7 +356,6 @@ components:
                 minLength: 1
                 example: https://api.caseworx-baurecht.de/v0/uploads/12345
               expires:
-                # implementation: set expires to 24 hrs after upload creation
                 description: Expiration date and time of the upload manager resource. After this time the resource cannot be used. All parts of an unfinished upload will be destroyed.
                 type: string
                 format: date-time
@@ -359,6 +364,8 @@ components:
     PartialUploadFinishedOK:
       description: Delivered part of the media object has been successfully uploaded. Based on the indications in the Content-Range headers the implementation has determined that all parts of the media object have been successfully received. The parts have been assembled, resulting document resource has been successfully created. The URL of the created document resource is returned in the Location header. The upload manager resource has been terminated and must not be used any longer.
       headers:
+        x-cwx-cid:
+          $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
         location:
           description: URL of the created document resource
           schema:
@@ -371,6 +378,9 @@ components:
         Not Acceptable  
         Content in required format is not available.  
         Accept header indicates a media type that is not available.
+      headers:
+        x-cwx-cid:
+          $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
       content:
         application/json:
           schema:
@@ -379,6 +389,9 @@ components:
       description: |
         Cannot establish request payload size  
         Content-Length header either not specified or invalid.
+      headers:
+        x-cwx-cid:
+          $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
       content:
         application/json:
           schema:
@@ -387,6 +400,9 @@ components:
       description: |
         Request payload too large  
         The document body cannot be larger than 4MB (4194304 bytes). Partial upload to be implemented later.
+      headers:
+        x-cwx-cid:
+          $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
       content:
         application/json:
           schema:
@@ -396,6 +412,9 @@ components:
         Unsupported Media Type  
         Content in required format is not available or cannot be accepted.  
         Content-Type header indicates a media type that is not supported.
+      headers:
+        x-cwx-cid:
+          $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
       content:
         application/json:
           schema:
@@ -405,6 +424,9 @@ components:
         Requested range nof satisfiable  
         The partial download request specifies the range of bytes that cannot be satisfied. Range is considered satisfiable if the resource and range overlap - in this case HTTP 206 is returned and Content-Range header indicates the part of the resource that is delivered.
         Likely cause of this error is the first-byte-pos  greater than the entire length of resource. 
+      headers:
+        x-cwx-cid:
+          $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
       content:
         application/json:
           schema:
