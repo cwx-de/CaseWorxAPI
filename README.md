@@ -23,7 +23,7 @@ Resolved:
 ----------------
 
 API reference documentation is available from the SwaggerHub: 
-[https://app.swaggerhub.com/apis/CaseWorx/CwxAPI/0.4.0](https://app.swaggerhub.com/apis/CaseWorx/CwxAPI/0.4.0)
+[https://app.swaggerhub.com/apis/CaseWorx/CwxAPI/0.5.0](https://app.swaggerhub.com/apis/CaseWorx/CwxAPI/0.5.0)
 
 ## Tools
 --------
