@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 0.5.0
+  version: 0.5.1
   title: CaseWorx API
   termsOfService: 'https://www.wolterskluwer-online.de/informationen/datenschutz'
   contact:
@@ -1106,22 +1106,11 @@ paths:
                             - media
                             - acl
                         layer:
-                          description: Indicates media layer
-                          readOnly: true
-                          type: string
-                          enum:
-                            - original
-                            - unified
-                          default: unified
-                          example: original
+                          $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents~1%7BdocumentId%7D~1media/get/parameters/0/schema'
                         caseId:
-                          $ref: '#/paths/~1changes/get/responses/200/content/application~1json/schema/properties/changes/items/properties/docId'
+                          $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0/schema'
                         docId:
-                          description: 'Standard resource ID (case, document)'
-                          type: integer
-                          format: int64
-                          minimum: 0
-                          example: 12345
+                          $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0/schema'
                         userId:
                           $ref: '#/paths/~1cases/parameters/0/schema'
               examples:

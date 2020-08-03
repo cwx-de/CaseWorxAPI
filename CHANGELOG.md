@@ -1,6 +1,10 @@
 # Change Log
 ------------
 
+## CaseWorx API v0.5.1
+----------------------
+- bugfix release
+
 ## CaseWorx API v0.5.0
 ----------------------
 

@@ -3,7 +3,7 @@ info:
   title: CaseWorx API - Case Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Case Domain describing components of the case
-  version: "0.1.0"
+  version: 0.1.1
   contact: 
     name: Wolters Kluwer Deutschland GmbH
     url: https://www.caseworx-baurecht.de/informationen/kontakt
@@ -86,7 +86,7 @@ components:
       in: path
       required: true
       schema:
-        $ref: 'https://api.swaggerhub.com/domains/CaseWorx/CwxCommonsDomain/0.0.1#/components/schemas/ResourceId'
+        $ref: 'cwx-commons-domain.yaml#/components/schemas/ResourceId'
       example: 12345
 
     CaseQueryRef:
@@ -96,7 +96,7 @@ components:
       in: query
       required: true
       schema:
-        $ref: 'https://api.swaggerhub.com/domains/CaseWorx/CwxCommonsDomain/0.0.1#/components/schemas/ResourceId'
+        $ref: 'cwx-commons-domain.yaml#/components/schemas/ResourceId'
       example: 12345
   
   requestBodies:
