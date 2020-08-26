@@ -3,7 +3,7 @@ info:
   title: CaseWorx API - Case Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Case Domain describing components of the case
-  version: 0.1.1
+  version: "0.2.0"
   contact: 
     name: Wolters Kluwer Deutschland GmbH
     url: https://www.caseworx-baurecht.de/informationen/kontakt
@@ -59,6 +59,7 @@ components:
         description:
           description: |
             Description of a case / Kurzbeschreibung  
+            [BAUM-2156](https://jira.wolterskluwer.io/jira/browse/BAUM-2156) - v0.0.5 returns empty string or null, minLength is not honored
           type: string
           minLength: 1
           maxLength: 300
@@ -111,6 +112,7 @@ components:
     CaseCreatedOK:
       description: |
         New case item successfully added.  
+        [BAUM-2157](https://jira.wolterskluwer.io/jira/browse/BAUM-2157) v0.0.5 returns the created object in response body.
       headers:
         x-cwx-cid:
           $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'

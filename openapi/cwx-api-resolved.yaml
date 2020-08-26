@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 0.5.1
+  version: 0.6.0
   title: CaseWorx API
   termsOfService: 'https://www.wolterskluwer-online.de/informationen/datenschutz'
   contact:
@@ -12,10 +12,61 @@ info:
     url: 'https://www.gnu.org/licenses/agpl-3.0.html'
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API
+      
+    Change log:  
+      
+    *0.6.0*
+    - add the possibility to set the ACL for a case: PUT /cases/{caseId}/acl
+    - change type of error code to string
+    - upgrade CwxCommonsDomain to v0.2.0
+    - upgrade CwxCaseDomain to v0.2.0
+    - upgrade CwxMediaDomain to v0.2.0
+    - upgrade CwxChangeDomain to v0.2.0
+    - security schemes clean-up
+
+    *0.5.0*
+    - add correlation ID header
+    - add HTTP 429 response to all requests to accommodate throttling
+    - upgrade CwxCommonsDomain to v0.1.0
+    - upgrade CwxCaseDomain to v0.1.0
+    - upgrade CwxChangeDomain to v0.1.0
+    - upgrade CwxMediaDomain to v0.1.0
+
+    *0.3.5*
+    - add endpoints supporting retrieval of changes
+    - add the parameter to direct download of a specific media layer, [BAUM-2274](https://jira.wolterskluwer.io/jira/browse/BAUM-2274)
+
+    *0.3.4*
+    - break down into domains
+    - decrease simple request limit to 4MB (lambda 6MB, limit to 5679790 bytes)
+
+    *0.3.3*
+    - added delete operations on a case and a document
+    - refined restrictions on case and document IDs
+
+    *0.3.2*
+    - merging v0.0.5
+
+    *0.3.0*
+    - merging v0.0.4: changed Document model to accommodate complex structure of defects and suggestion.defects
+
+    *0.2.0*
+    - added partial upload and download
+
+    *0.1.0*
+    - added security schemas: apiKey and oauth2
 servers:
-  - description: Production environment
+  - description: Production environment (use oAuth2AuthCodePrd security schema)
     url: 'https://api.caseworx-baurecht.de/v0'
+  - description: Staging environment (use oAuth2AuthCodeNonPrd security schema)
+    url: 'https://api-stg.caseworx-baurecht.de/v0'
+  - description: QA environment (use oAuth2AuthCodeNonPrd security schema)
+    url: 'https://api-qa.caseworx-baurecht.de/v0'
+  - description: Dev environment (use oAuth2AuthCodeNonPrd security schema)
+    url: 'https://api-labs.caseworx-baurecht.de/v0'
 tags:
+  - name: access-control
+    description: Operations on ACLs
   - name: cases
     description: Operations on cases
   - name: documents
@@ -26,7 +77,22 @@ tags:
     description: Operations on changes (aka audit log)
 security:
   - apiKeyAuth: []
-  - oAuth2AuthCode: []
+  - oAuth2AuthCode:
+      - openid
+      - profile
+      - 'urn:wkde:cwx:api'
+  - oAuth2AuthCodeNonPrd:
+      - openid
+      - profile
+      - 'urn:wkde:cwx:api'
+  - oAuth2RopcPrd:
+      - openid
+      - profile
+      - 'urn:wkde:cwx:api'
+  - oAuth2RopcNonPrd:
+      - openid
+      - profile
+      - 'urn:wkde:cwx:api'
 paths:
   /cases:
     parameters:
@@ -44,6 +110,9 @@ paths:
       tags:
         - cases
       description: Returns a collecion of all cases the user has access to
+      externalDocs:
+        description: User Story
+        url: 'https://jira.wolterskluwer.io/jira/browse/BAUM-1774'
       responses:
         '200':
           description: Returns an array of cases
@@ -103,6 +172,7 @@ paths:
                     description:
                       description: |
                         Description of a case / Kurzbeschreibung  
+                        [BAUM-2156](https://jira.wolterskluwer.io/jira/browse/BAUM-2156) - v0.0.5 returns empty string or null, minLength is not honored
                       type: string
                       minLength: 1
                       maxLength: 300
@@ -136,8 +206,8 @@ paths:
                 type: object
                 properties:
                   code:
-                    type: integer
-                    example: 100000
+                    type: string
+                    example: some_error
                   message:
                     type: string
                     minLength: 1
@@ -191,6 +261,9 @@ paths:
       tags:
         - cases
       description: Creates a new case resource
+      externalDocs:
+        description: User Story
+        url: 'https://jira.wolterskluwer.io/jira/browse/BAUM-1775'
       requestBody:
         description: Case item to create
         content:
@@ -201,6 +274,7 @@ paths:
         '201':
           description: |
             New case item successfully added.  
+            [BAUM-2157](https://jira.wolterskluwer.io/jira/browse/BAUM-2157) v0.0.5 returns the created object in response body.
           headers:
             x-cwx-cid:
               $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
@@ -237,6 +311,9 @@ paths:
       tags:
         - cases
       description: Deletes a case together with all documents stored within and their relevant media
+      externalDocs:
+        description: User Story
+        url: 'https://jira.wolterskluwer.io/jira/browse/BAUM-2134'
       responses:
         '202':
           description: |
@@ -251,7 +328,7 @@ paths:
               schema:
                 $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
               example:
-                code: 202001
+                code: resource_not_ready
                 message: 'Requested media of the document resource {documentId} is not ready'
                 hint: Requested resource exists but it has not yet reached the state in its lifecycle where the requested criteria are satisfied. It may or may not reach this state in the future.
         '204':
@@ -281,6 +358,120 @@ paths:
           $ref: '#/paths/~1cases/get/responses/429'
         '500':
           $ref: '#/paths/~1cases/get/responses/500'
+  '/cases/{caseId}/acl':
+    parameters:
+      - $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0'
+      - $ref: '#/paths/~1cases/parameters/0'
+    put:
+      tags:
+        - access-control
+      description: |
+        Replace the Access Control List (ACL) of a case.  
+        This operation replaces the ACL of a case. All recipients must unequivocally resolve to existing user entities - each recipient must match exactly one existing user entity, otherwise an error will be returned and no changes to the ACL will be made.  
+        The access rights of the case owner cannot be changed - the owner has always read/write permissions. If the owner of the case is found on the recipients list, it will be ignored and no error will be raised.  
+        The user on whose behalf the request is executed must have write permission to the case.  
+        *Compliancy with GDPR*: this operation expects the API client to potentially send personal data as defined by the General Data Protection Regulation. The owner of the client application should ensure that an appropriate legal framework for personal data processing exists.
+      requestBody:
+        description: ACL to create
+        content:
+          application/json:
+            schema:
+              description: access control list
+              type: array
+              items:
+                description: access control list entry
+                type: object
+                properties:
+                  recipient:
+                    $ref: '#/paths/~1cases~1%7BcaseId%7D~1acl/put/responses/400/content/application~1json/schema/allOf/1/properties/recipients/items'
+                  permissions:
+                    description: permissions to be grantes
+                    type: object
+                    properties:
+                      read:
+                        description: grants read access if set to true
+                        type: boolean
+                      write:
+                        description: 'grants write access if set to true, requires read set to true as well, write access cannot be granted without read access; defaults to false'
+                        type: boolean
+                    required:
+                      - read
+                required:
+                  - recipient
+                  - permissions
+              minItems: 1
+            examples:
+              acl:
+                description: ACL that grants read/write access to Alice and read-only access to Bob
+                value:
+                  - recipient:
+                      email: alice@caseworx-baurecht.de
+                    permissions:
+                      read: true
+                      write: true
+                  - recipient:
+                      email: bob@caseworx-baurecht.de
+                    permissions:
+                      read: true
+      responses:
+        '201':
+          description: Confirms successful change of the case ACL
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
+        '400':
+          description: |
+            Request cannot be processed  
+            `code`: `invalid_recipient`  
+            The response includes a `recipients` array listing the requested recipients that prevent the request from being serviced successfully. It will happen if the recipients cannot be mapped to known user entities. The client may choose to remove the offending recipients and repeat the request.  
+            `code`: `inconsistent_permissions`  
+            Requested permissions conflict with the business rules. It will happen if write permission is requested without read permission.
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
+          content:
+            application/json:
+              schema:
+                description: error model extension to provide list of recipients causing the request to fail
+                allOf:
+                  - $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+                  - type: object
+                    properties:
+                      recipients:
+                        type: array
+                        items:
+                          description: recipient of permissions
+                          type: object
+                          properties:
+                            email:
+                              description: email address of the recipient
+                              type: string
+                          required:
+                            - email
+              examples:
+                invalid_recipient:
+                  description: Error response enumerating Jane and John as unknown to CaseWorx thus preventing a successful ACL change
+                  value:
+                    code: invalid_recipient
+                    message: One or more ACEs contain recipients that cannot be resolved
+                    recipients:
+                      - email: jane@caseworx-baurecht.de
+                      - email: john@caseworx-baurecht.de
+                inconsistent_permissions:
+                  description: Error response indicating requested permissions violating business rules
+                  value:
+                    code: inconsistent_permissions
+                    message: One or more ACEs contain permissions that conflict with the business rules
+        '401':
+          $ref: '#/paths/~1cases/get/responses/401'
+        '403':
+          $ref: '#/paths/~1cases/get/responses/403'
+        '404':
+          $ref: '#/paths/~1cases~1%7BcaseId%7D/delete/responses/404'
+        '429':
+          $ref: '#/paths/~1cases/get/responses/429'
+        '500':
+          $ref: '#/paths/~1cases/get/responses/500'
   /cases/changes:
     $ref: '#/paths/~1changes'
   /cases/changes/startPageToken:
@@ -293,6 +484,9 @@ paths:
       tags:
         - documents
       description: 'Returns selected properties of documents in a case. At present `id`, `title`, `date` and `types` are returned. Implementation may return other properties as well. Proper partial response will be implemented later. If a particular document exists only in its raw layer (not enriched) only `id` is returned.'
+      externalDocs:
+        description: User Story
+        url: 'https://jira.wolterskluwer.io/jira/browse/BAUM-2047'
       responses:
         '200':
           description: Returns an array of documents in a case with available properties
@@ -325,6 +519,9 @@ paths:
       description: |
         Uploads a document media. The upload results in creating a document resource.  
         At present this is the only way to create a document resource - the creation flow starts with uploading the document media. Once the media is processed, the document resource receives its basic collection of metadata assigned by the system.
+      externalDocs:
+        description: User Story
+        url: 'https://jira.wolterskluwer.io/jira/browse/BAUM-1776'
       parameters:
         - name: content-disposition
           description: |
@@ -340,6 +537,9 @@ paths:
           in: header
           schema:
             description: Enumeration of supported content types that document media can be uploaded in
+            externalDocs:
+              description: Supported Media Types
+              url: 'https://confluence.wolterskluwer.io/display/WKBAUM/Supported+Media+Types'
             type: string
             enum:
               - application/pdf
@@ -374,6 +574,7 @@ paths:
       requestBody:
         description: |
           Document body for upload. The document size limit is 4MB (4194304 bytes), for larger documents HTTP 413 is returned. Partial upload will be added later.  
+          [BAUM-2173](https://jira.wolterskluwer.io/jira/browse/BAUM-2173) - under certain conditions HTTP 500 may be returned; the response body may not adhere to the specification
         content:
           application/pdf:
             schema:
@@ -502,6 +703,9 @@ paths:
       tags:
         - documents
       description: Returns properties of a document
+      externalDocs:
+        description: User Story
+        url: 'https://jira.wolterskluwer.io/jira/browse/BAUM-1933'
       responses:
         '200':
           description: Returns properties of a document
@@ -709,6 +913,9 @@ paths:
       tags:
         - documents
       description: Deletes a document together with all associated media
+      externalDocs:
+        description: User Story
+        url: 'https://jira.wolterskluwer.io/jira/browse/BAUM-2174'
       responses:
         '202':
           $ref: '#/paths/~1cases~1%7BcaseId%7D/delete/responses/202'
@@ -738,7 +945,11 @@ paths:
       tags:
         - media
       description: |
-        Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.
+        Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.  
+        [BAUM-2159](https://jira.wolterskluwer.io/jira/browse/BAUM-2159) - immediately after upload a request for download media may result in HTTP 404 instead of HTTP 202.
+      externalDocs:
+        description: User Story
+        url: 'https://jira.wolterskluwer.io/jira/browse/BAUM-1895'
       parameters:
         - name: layer
           description: 'An indication of the media layer. If omitted, it defaults to `unified`.'
@@ -757,6 +968,7 @@ paths:
         - name: accept
           description: |
             a [list of media types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) the client is willing to accept. If Accept is not specified, defaults to \*/*.  
+            [BAUM-2172](https://jira.wolterskluwer.io/jira/browse/BAUM-2172) - in v0.0.5 the request is serviced regardless of the Accept header value
           in: header
           schema:
             type: string
@@ -869,6 +1081,9 @@ paths:
         - media
       description: |
         Creates an upload manager resource for executing partial uploads of a document media for a specified case.
+      externalDocs:
+        description: Spike
+        url: 'https://jira.wolterskluwer.io/jira/browse/BAUM-2111'
       parameters:
         - name: case
           description: |
@@ -958,6 +1173,9 @@ paths:
       description: |
         Use an upload manager with the specified ID to exceute uploads of a document media part.  
         The client must ensure that the last part is only uploaded when all previous uploads have finished successfully.
+      externalDocs:
+        description: Spike
+        url: 'https://jira.wolterskluwer.io/jira/browse/BAUM-2111'
       parameters:
         - name: content-length
           description: 'An [indication of the content length](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/content-length) in octets'
@@ -1098,6 +1316,7 @@ paths:
                             - create
                             - delete
                             - update
+                            - mark-for-delete
                         target:
                           description: Indicates which feature of a resource is affected by the change
                           type: string
@@ -1175,10 +1394,12 @@ paths:
 components:
   securitySchemes:
     apiKeyAuth:
+      description: API key authorization scheme
       type: apiKey
       in: header
       name: x-api-key
     oAuth2AuthCode:
+      description: OAuth2 authorization scheme for production endpoint - only Authorization Code grant is supported for production configurations
       type: oauth2
       flows:
         authorizationCode:
@@ -1187,4 +1408,35 @@ components:
           scopes:
             openid: set OpenID context
             profile: OpenID profile
-            'urn:wkde:cwx:api': CaseWorx API scope
+            'urn:wkde:cwx:api': CWX API access
+    oAuth2AuthCodeNonPrd:
+      description: OAuth2 authorization scheme for non-production endpoints (Authorization Code grant)
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: 'https://login-stg.wolterskluwer.eu/as/authorization.oauth2?pfidpadapterid=JurionCompositeAdapter'
+          tokenUrl: 'https://login-stg.wolterskluwer.eu/as/token.oauth2'
+          scopes:
+            openid: OpenID context
+            profile: OpenID profile
+            'urn:wkde:cwx:api': CWX API access
+    oAuth2RopcPrd:
+      description: 'OAuth2 authorization scheme for production endpoint (ROPC grant) - only for testing, never for user-facing clients'
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: 'https://login.wolterskluwer.eu/as/token.oauth2?pfidpadapterid=JurionCompositeAdapter'
+          scopes:
+            openid: OpenID context
+            profile: OpenID profile
+            'urn:wkde:cwx:api': CWX API access
+    oAuth2RopcNonPrd:
+      description: OAuth2 authorization scheme for non-production endpoints (ROPC grant)
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: 'https://login-stg.wolterskluwer.eu/as/token.oauth2?pfidpadapterid=JurionCompositeAdapter'
+          scopes:
+            openid: OpenID context
+            profile: OpenID profile
+            'urn:wkde:cwx:api': CWX API access

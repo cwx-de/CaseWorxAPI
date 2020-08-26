@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 0.5.1
+  version: "0.6.0"
   title: 'CaseWorx API'
   termsOfService: https://www.wolterskluwer-online.de/informationen/datenschutz
   contact: 
@@ -12,12 +12,63 @@ info:
     url: https://www.gnu.org/licenses/agpl-3.0.html
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API
-
+      
+    Change log:  
+      
+    *0.6.0*
+    - add the possibility to set the ACL for a case: PUT /cases/{caseId}/acl
+    - change type of error code to string
+    - upgrade CwxCommonsDomain to v0.2.0
+    - upgrade CwxCaseDomain to v0.2.0
+    - upgrade CwxMediaDomain to v0.2.0
+    - upgrade CwxChangeDomain to v0.2.0
+    - security schemes clean-up
+    
+    *0.5.0*
+    - add correlation ID header
+    - add HTTP 429 response to all requests to accommodate throttling
+    - upgrade CwxCommonsDomain to v0.1.0
+    - upgrade CwxCaseDomain to v0.1.0
+    - upgrade CwxChangeDomain to v0.1.0
+    - upgrade CwxMediaDomain to v0.1.0
+    
+    *0.3.5*
+    - add endpoints supporting retrieval of changes
+    - add the parameter to direct download of a specific media layer, [BAUM-2274](https://jira.wolterskluwer.io/jira/browse/BAUM-2274)
+    
+    *0.3.4*
+    - break down into domains
+    - decrease simple request limit to 4MB (lambda 6MB, limit to 5679790 bytes)
+    
+    *0.3.3*
+    - added delete operations on a case and a document
+    - refined restrictions on case and document IDs
+    
+    *0.3.2*
+    - merging v0.0.5
+    
+    *0.3.0*
+    - merging v0.0.4: changed Document model to accommodate complex structure of defects and suggestion.defects
+    
+    *0.2.0*
+    - added partial upload and download
+    
+    *0.1.0*
+    - added security schemas: apiKey and oauth2
+    
 servers:
-  - description: Production environment
+  - description: Production environment (use oAuth2AuthCodePrd security schema)
     url: https://api.caseworx-baurecht.de/v0
+  - description: Staging environment (use oAuth2AuthCodeNonPrd security schema)
+    url: https://api-stg.caseworx-baurecht.de/v0
+  - description: QA environment (use oAuth2AuthCodeNonPrd security schema)
+    url: https://api-qa.caseworx-baurecht.de/v0
+  - description: Dev environment (use oAuth2AuthCodeNonPrd security schema)
+    url: https://api-labs.caseworx-baurecht.de/v0
 
 tags: 
+  - name: access-control
+    description: Operations on ACLs
   - name: cases
     description: Operations on cases
   - name: documents
@@ -27,9 +78,26 @@ tags:
   - name: changes
     description: Operations on changes (aka audit log)
   
-security: 
+security:
   - apiKeyAuth: []
-  - oAuth2AuthCode: []
+  - oAuth2AuthCode:
+    - openid
+    - profile
+    - urn:wkde:cwx:api    
+
+  # the security schemes below are to be used for development and testing, never on production
+  - oAuth2AuthCodeNonPrd:
+    - openid
+    - profile
+    - urn:wkde:cwx:api    
+  - oAuth2RopcPrd:
+    - openid
+    - profile
+    - urn:wkde:cwx:api    
+  - oAuth2RopcNonPrd:
+    - openid
+    - profile
+    - urn:wkde:cwx:api    
 
 paths:
   /cases:
@@ -41,6 +109,9 @@ paths:
       tags: 
         - cases
       description: Returns a collecion of all cases the user has access to
+      externalDocs:
+        description: User Story
+        url: https://jira.wolterskluwer.io/jira/browse/BAUM-1774
       responses:
         '200':
           description: Returns an array of cases
@@ -69,12 +140,16 @@ paths:
       tags:
         - cases
       description: Creates a new case resource
+      externalDocs:
+        description: User Story
+        url: https://jira.wolterskluwer.io/jira/browse/BAUM-1775
       requestBody:
         $ref: 'cwx-case-domain.yaml#/components/requestBodies/CreateCase'
       responses:
         '201':
           $ref: 'cwx-case-domain.yaml#/components/responses/CaseCreatedOK'
         '400':
+          # implementation: throw 400 if request parameters don't satisfy the validation criteria
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
         '401':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
@@ -95,14 +170,19 @@ paths:
       tags:
         - cases
       description: Deletes a case together with all documents stored within and their relevant media
+      externalDocs:
+        description: User Story
+        url: 'https://jira.wolterskluwer.io/jira/browse/BAUM-2134'
       responses:
         '202':
+          # Confirms that the request has been received and the service will eventually attempt to act upon it.
           $ref: 'cwx-commons-domain.yaml#/components/responses/Info202'
         '204':
           description: Confirms that the operation has been executed successfully
           headers:
             x-cwx-cid:
               $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'          
+          # implementation: when the 204 is returned the implementation must ensure that a subsequent request to this case resource or the document resources that were stored in this case return HTTP 404
         '400':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
         '401':
@@ -116,6 +196,41 @@ paths:
         '500':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
 
+  /cases/{caseId}/acl:
+    parameters:
+      - $ref: 'cwx-case-domain.yaml#/components/parameters/CaseId'
+      - $ref: 'cwx-commons-domain.yaml#/components/parameters/CorrelationId'
+    
+    put:
+      tags: 
+        - access-control
+      description: |
+        Replace the Access Control List (ACL) of a case.  
+        This operation replaces the ACL of a case. All recipients must unequivocally resolve to existing user entities - each recipient must match exactly one existing user entity, otherwise an error will be returned and no changes to the ACL will be made.  
+        The access rights of the case owner cannot be changed - the owner has always read/write permissions. If the owner of the case is found on the recipients list, it will be ignored and no error will be raised.  
+        The user on whose behalf the request is executed must have write permission to the case.  
+        *Compliancy with GDPR*: this operation expects the API client to potentially send personal data as defined by the General Data Protection Regulation. The owner of the client application should ensure that an appropriate legal framework for personal data processing exists.
+      requestBody:
+        $ref: 'cwx-access_ctrl-domain.yaml#/components/requestBodies/SetAcl'
+      responses:
+        '201':
+          description: Confirms successful change of the case ACL
+          headers:
+            x-cwx-cid:
+              $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
+        '400':
+          $ref: 'cwx-access_ctrl-domain.yaml#/components/responses/SetAclError400'
+        '401':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
+        '403':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
+        '404':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error404'
+        '429':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error429'
+        '500':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
+  
   /cases/changes:
     $ref: 'cwx-change-domain.yaml#/components/pathitems/Changes'
     
@@ -133,6 +248,10 @@ paths:
       tags:
         - documents
       description: Returns selected properties of documents in a case. At present `id`, `title`, `date` and `types` are returned. Implementation may return other properties as well. Proper partial response will be implemented later. If a particular document exists only in its raw layer (not enriched) only `id` is returned.
+      # implementation: MUST return id, MUST return title, date, types if they exist and MAY return other properties if available (i.e. backend returns them anyway)
+      externalDocs:
+        description: User Story
+        url: 'https://jira.wolterskluwer.io/jira/browse/BAUM-2047'
       responses:
         '200':
           description: Returns an array of documents in a case with available properties
@@ -144,6 +263,7 @@ paths:
               schema:
                 type: array
                 items:
+                  # documents in original state may not have all required properties, in most cases respons will be valid Document
                   anyOf:
                     - $ref: 'cwx-document-domain.yaml#/components/schemas/DocumentRaw'
                     - $ref: 'cwx-document-domain.yaml#/components/schemas/Document'
@@ -167,6 +287,9 @@ paths:
       description: |
         Uploads a document media. The upload results in creating a document resource.  
         At present this is the only way to create a document resource - the creation flow starts with uploading the document media. Once the media is processed, the document resource receives its basic collection of metadata assigned by the system.
+      externalDocs:
+        description: User Story
+        url: https://jira.wolterskluwer.io/jira/browse/BAUM-1776
       parameters:
         - $ref: 'cwx-media-domain.yaml#/components/parameters/ContentDisposition'
         - $ref: 'cwx-media-domain.yaml#/components/parameters/ContentLength'
@@ -179,16 +302,21 @@ paths:
         '201':
           $ref: 'cwx-media-domain.yaml#/components/responses/SimpleMediaUploadOK'
         '400':
+          # implementation: throw 400 if request parameters don't satisfy the validation criteria
+          # implementation: throw 400 if filename cannot be established from content-disposition header
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
         '401':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
         '403':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
         '411':
+          # implementation: fail if Content-Length doesn't exist or cannot be parsed to a number
           $ref: 'cwx-media-domain.yaml#/components/responses/Error411'
         '413':
+          # implementation: fail if Content-Length > 4194304
           $ref: 'cwx-media-domain.yaml#/components/responses/Error413'
         '415':
+          # implementation: fail if Content-Type doesn't match supported formats, Content-Type MUST contain single token that matches exactly one of the supported MIME types
           $ref: 'cwx-media-domain.yaml#/components/responses/Error415'
         '429':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error429'
@@ -206,6 +334,9 @@ paths:
       tags:
         - documents
       description: Returns properties of a document
+      externalDocs:
+        description: User Story
+        url: 'https://jira.wolterskluwer.io/jira/browse/BAUM-1933'
       responses:
         '200':
           description: Returns properties of a document
@@ -237,14 +368,20 @@ paths:
       tags:
         - documents
       description: Deletes a document together with all associated media
+      externalDocs:
+        description: User Story
+        url: 'https://jira.wolterskluwer.io/jira/browse/BAUM-2174'
       responses:
         '202':
+          # Confirms that the request has been received and the service will eventually attempt to act upon it.
           $ref: 'cwx-commons-domain.yaml#/components/responses/Info202'
         '204':
           description: Confirms that the operation has been executed successfully
           headers:
             x-cwx-cid:
               $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
+
+          # implementation: when the 204 is returned the implementation must ensure that a subsequent request to this document resource return HTTP 404
         '400':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
         '401':
@@ -269,7 +406,11 @@ paths:
       tags: 
         - media
       description: |
-        Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.
+        Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.  
+        [BAUM-2159](https://jira.wolterskluwer.io/jira/browse/BAUM-2159) - immediately after upload a request for download media may result in HTTP 404 instead of HTTP 202.
+      externalDocs:
+        description: User Story
+        url: 'https://jira.wolterskluwer.io/jira/browse/BAUM-1895'
       parameters:
         - $ref: 'cwx-media-domain.yaml#/components/parameters/LayerQueryRef'
         - $ref: 'cwx-media-domain.yaml#/components/parameters/Accept'
@@ -289,14 +430,20 @@ paths:
         '403':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
         '404':
+          # implementation: throw when either caseId or documentId don't exist
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error404'
         '406':
+          # implementation: throw when request specifies Accept header but doesn't accept application/pdf
+          # implementation: MAY tokenize Accept value and expand wildcards
           $ref: 'cwx-media-domain.yaml#/components/responses/Error406'
         '416':
+          # implementation: throw when requested range doesn't overlap with the full media object
           $ref: 'cwx-media-domain.yaml#/components/responses/Error416'
         '429':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error429'
         '500':
+          # implementation: throw when response payload is greater than 4MB (4194304 bytes)
+          # implementation: upstream service MAY check the document size and should throw HTTP 500
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
 
   /uploads:
@@ -308,6 +455,9 @@ paths:
         - media
       description: |
         Creates an upload manager resource for executing partial uploads of a document media for a specified case.
+      externalDocs:
+        description: Spike
+        url: https://jira.wolterskluwer.io/jira/browse/BAUM-2111
       parameters:
         - $ref: 'cwx-case-domain.yaml#/components/parameters/CaseQueryRef'
       requestBody:
@@ -317,10 +467,14 @@ paths:
         '201':
           $ref: 'cwx-media-domain.yaml#/components/responses/UploadManagerCreatedOK'
         '400':
+          # implementation: throw 400 if request parameters don't satisfy the validation criteria.
+          # implementation: throw 400 if caseId doesn't exist.
+          # implementation: fail if contentType doesn't match supported formats.
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
         '401':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
         '403':
+          # implementation: throw 403 if the user has no permission to write to the case with caseId.
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
         '429':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error429'
@@ -338,15 +492,24 @@ paths:
       description: |
         Use an upload manager with the specified ID to exceute uploads of a document media part.  
         The client must ensure that the last part is only uploaded when all previous uploads have finished successfully.
+      externalDocs:
+        description: Spike
+        url: https://jira.wolterskluwer.io/jira/browse/BAUM-2111      
       parameters:
         - $ref: 'cwx-media-domain.yaml#/components/parameters/ContentLength'
         - $ref: 'cwx-media-domain.yaml#/components/parameters/ContentRange'
         - $ref: 'cwx-media-domain.yaml#/components/parameters/PartialUploadContentType'
 
       responses:
+#        '201':
+#          $ref: 'cwx-media-domain.yaml#/components/responses/PartialUploadFinishedOK'
         '202':
           description: Delivered part of the media object has been successfully uploaded. When all parts of the media resource have been uploaded, the resource will be automatically assembled. Client is expected to manage the upload and determine when all parts have been successfully uploaded.
+          # implementation: this response has no body
         '400':
+          # implementation: throw 400 if request parameters don't satisfy the validation criteria
+          # implementation: throw 400 if Content-Range doesn't agree with Content-Length (or is invalid). I.e. last-byte-pos minus first-byte-pos must equal Content-Length.
+          # implementation: throw 400 if Content-Range complete-length doesn't agree with the contentLength stated in POST /uploads request that created this instance of upload manager
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
         '401':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
@@ -355,10 +518,13 @@ paths:
         '404':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error404'
         '411':
+          # implementation: fail if Content-Length doesn't exist or cannot be parsed to a number
           $ref: 'cwx-media-domain.yaml#/components/responses/Error411'
         '413':
+          # implementation: fail if Content-Length > 4194304
           $ref: 'cwx-media-domain.yaml#/components/responses/Error413'
         '415':
+          # implementation: fail if Content-Type doesn't match application-octet-stream
           $ref: 'cwx-media-domain.yaml#/components/responses/Error415'
         '429':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error429'
@@ -374,10 +540,13 @@ paths:
 components:
   securitySchemes:
     apiKeyAuth:
+      description: API key authorization scheme
       type: apiKey
       in: header
       name: x-api-key
+
     oAuth2AuthCode:
+      description: OAuth2 authorization scheme for production endpoint - only Authorization Code grant is supported for production configurations
       type: oauth2
       flows:
         authorizationCode:
@@ -386,4 +555,37 @@ components:
           scopes:
             openid: set OpenID context
             profile: OpenID profile
-            urn:wkde:cwx:api: CaseWorx API scope
+            urn:wkde:cwx:api: CWX API access
+
+    # non-production schemes - only for development and testing
+    oAuth2AuthCodeNonPrd:
+      description: OAuth2 authorization scheme for non-production endpoints (Authorization Code grant)
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: 'https://login-stg.wolterskluwer.eu/as/authorization.oauth2?pfidpadapterid=JurionCompositeAdapter'
+          tokenUrl: 'https://login-stg.wolterskluwer.eu/as/token.oauth2'
+          scopes:
+            openid: OpenID context
+            profile: OpenID profile
+            urn:wkde:cwx:api: CWX API access
+    oAuth2RopcPrd:
+      description: OAuth2 authorization scheme for production endpoint (ROPC grant) - only for testing, never for user-facing clients
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: 'https://login.wolterskluwer.eu/as/token.oauth2?pfidpadapterid=JurionCompositeAdapter'
+          scopes:
+            openid: OpenID context
+            profile: OpenID profile
+            urn:wkde:cwx:api: CWX API access
+    oAuth2RopcNonPrd:
+      description: OAuth2 authorization scheme for non-production endpoints (ROPC grant)
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: 'https://login-stg.wolterskluwer.eu/as/token.oauth2?pfidpadapterid=JurionCompositeAdapter'
+          scopes:
+            openid: OpenID context
+            profile: OpenID profile
+            urn:wkde:cwx:api: CWX API access
