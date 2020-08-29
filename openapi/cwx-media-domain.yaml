@@ -3,7 +3,7 @@ info:
   title: CaseWorx API - Media Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Media Domain describing shared components of the API
-  version: "0.1.0"
+  version: "0.2.0"
   contact: 
     name: Wolters Kluwer Deutschland GmbH
     url: https://www.caseworx-baurecht.de/informationen/kontakt
@@ -21,6 +21,8 @@ components:
       enum:
         - original
         - unified
+        # annotated on hold for implementing persistent annotated layers
+        # - annotated
       default: unified
       example: original
       
@@ -128,8 +130,7 @@ components:
           
     Accept:
       name: accept
-      description: |
-        a [list of media types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) the client is willing to accept. If Accept is not specified, defaults to \*/*.  
+      description: A [list of media types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) the client is willing to accept. If Accept is not specified, defaults to \*/*.  
       in: header
       schema:
         type: string

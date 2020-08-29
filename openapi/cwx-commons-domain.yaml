@@ -3,7 +3,7 @@ info:
   title: CaseWorx API - Commons Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Commons Domain describing shared components of the API
-  version: "0.1.0"
+  version: "0.2.0"
   contact: 
     name: Wolters Kluwer Deutschland GmbH
     url: https://www.caseworx-baurecht.de/informationen/kontakt
@@ -32,8 +32,12 @@ components:
       type: object
       properties:
         code:
+          deprecated: true
           type: integer
           example: 100000
+        status:
+          type: string
+          example: some_error
         message:
           type: string
           minLength: 1
@@ -69,7 +73,7 @@ components:
           schema:
             $ref: '#/components/schemas/Error'  # Error schema fits here, striclty speaking this is not an error
           example:
-            code: 202001
+            status: resource_not_ready
             message: Requested media of the document resource {documentId} is not ready
             hint: Requested resource exists but it has not yet reached the state in its lifecycle where the requested criteria are satisfied. It may or may not reach this state in the future.
     Error400:

@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 0.5.1
+  version: 0.6.0
   title: CaseWorx API
   termsOfService: 'https://www.wolterskluwer-online.de/informationen/datenschutz'
   contact:
@@ -16,6 +16,8 @@ servers:
   - description: Production environment
     url: 'https://api.caseworx-baurecht.de/v0'
 tags:
+  - name: access-control
+    description: Operations on ACLs
   - name: cases
     description: Operations on cases
   - name: documents
@@ -26,7 +28,10 @@ tags:
     description: Operations on changes (aka audit log)
 security:
   - apiKeyAuth: []
-  - oAuth2AuthCode: []
+  - oAuth2AuthCode:
+      - openid
+      - profile
+      - 'urn:wkde:cwx:api'
 paths:
   /cases:
     parameters:
@@ -43,7 +48,7 @@ paths:
     get:
       tags:
         - cases
-      description: Returns a collecion of all cases the user has access to
+      description: Returns a collection of all cases the user has access to
       responses:
         '200':
           description: Returns an array of cases
@@ -101,8 +106,7 @@ paths:
                       minLength: 1
                       example: John Doe
                     description:
-                      description: |
-                        Description of a case / Kurzbeschreibung  
+                      description: Description of a case / Kurzbeschreibung
                       type: string
                       minLength: 1
                       maxLength: 300
@@ -136,8 +140,12 @@ paths:
                 type: object
                 properties:
                   code:
+                    deprecated: true
                     type: integer
                     example: 100000
+                  status:
+                    type: string
+                    example: some_error
                   message:
                     type: string
                     minLength: 1
@@ -199,8 +207,7 @@ paths:
               $ref: '#/paths/~1cases/get/responses/200/content/application~1json/schema/items'
       responses:
         '201':
-          description: |
-            New case item successfully added.  
+          description: New case item successfully added.
           headers:
             x-cwx-cid:
               $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
@@ -251,7 +258,7 @@ paths:
               schema:
                 $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
               example:
-                code: 202001
+                status: resource_not_ready
                 message: 'Requested media of the document resource {documentId} is not ready'
                 hint: Requested resource exists but it has not yet reached the state in its lifecycle where the requested criteria are satisfied. It may or may not reach this state in the future.
         '204':
@@ -277,6 +284,128 @@ paths:
             application/json:
               schema:
                 $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+        '429':
+          $ref: '#/paths/~1cases/get/responses/429'
+        '500':
+          $ref: '#/paths/~1cases/get/responses/500'
+  '/cases/{caseId}/acl':
+    parameters:
+      - $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0'
+      - $ref: '#/paths/~1cases/parameters/0'
+    put:
+      tags:
+        - access-control
+      description: |
+        Replace the Access Control List (ACL) of a case.  
+        This operation replaces the ACL of a case. All recipients must unequivocally resolve to existing user entities - each recipient must match exactly one existing user entity, otherwise an error will be returned and no changes to the ACL will be made.  
+        The access rights of the case owner cannot be changed - the owner has always read/write permissions. If the owner of the case is found on the recipients list, it will be ignored and no error will be raised.  
+        The user on whose behalf the request is executed must have write permission to the case.  
+        *Compliancy with GDPR*: this operation expects the API client to potentially send personal data as defined by the General Data Protection Regulation. The owner of the client application should ensure that an appropriate legal framework for personal data processing exists.
+      requestBody:
+        description: ACL to create
+        content:
+          application/json:
+            schema:
+              description: access control list
+              type: array
+              items:
+                description: access control list entry
+                type: object
+                properties:
+                  recipient:
+                    $ref: '#/paths/~1cases~1%7BcaseId%7D~1acl/put/responses/400/content/application~1json/schema/allOf/1/properties/recipients/items'
+                  permissions:
+                    description: permissions to be grantes
+                    type: object
+                    properties:
+                      read:
+                        description: grants read access if set to true
+                        type: boolean
+                      write:
+                        description: 'grants write access if set to true, requires read set to true as well, write access cannot be granted without read access; defaults to false'
+                        type: boolean
+                    required:
+                      - read
+                required:
+                  - recipient
+                  - permissions
+              minItems: 1
+            examples:
+              acl:
+                description: ACL that grants read/write access to Alice and read-only access to Bob
+                value:
+                  - recipient:
+                      email: alice@caseworx-baurecht.de
+                    permissions:
+                      read: true
+                      write: true
+                  - recipient:
+                      email: bob@caseworx-baurecht.de
+                    permissions:
+                      read: true
+      responses:
+        '201':
+          description: Confirms successful change of the case ACL
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
+        '400':
+          description: |
+            Request cannot be processed  
+            `status`: `malformed_request`  
+            Request structure does not comply with the specification.
+            `status`: `invalid_recipient`  
+            The response includes a `recipients` array listing the requested recipients that prevent the request from being serviced successfully. It will happen if the recipients cannot be mapped to known user entities. The client may choose to remove the offending recipients and repeat the request.  
+            `status`: `inconsistent_permissions`  
+            Requested permissions conflict with the business rules. It will happen if write permission is requested without read permission. Client may repeat the request after correcting permissions.
+          headers:
+            x-cwx-cid:
+              $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
+          content:
+            application/json:
+              schema:
+                description: error model extension to provide list of recipients causing the request to fail
+                allOf:
+                  - $ref: '#/paths/~1cases/get/responses/400/content/application~1json/schema'
+                  - type: object
+                    properties:
+                      recipients:
+                        type: array
+                        items:
+                          description: recipient of permissions
+                          type: object
+                          properties:
+                            email:
+                              description: email address of the recipient
+                              type: string
+                          required:
+                            - email
+                        minItems: 1
+              examples:
+                invalid_recipient:
+                  description: Error response enumerating Jane and John as unknown to CaseWorx thus preventing a successful ACL change
+                  value:
+                    status: invalid_recipient
+                    message: One or more ACEs contain recipients that cannot be resolved
+                    recipients:
+                      - email: jane@caseworx-baurecht.de
+                      - email: john@caseworx-baurecht.de
+                inconsistent_permissions:
+                  description: Error response indicating requested permissions violating business rules
+                  value:
+                    status: inconsistent_permissions
+                    message: One or more ACEs contain permissions that conflict with the business rules
+                malformed_request:
+                  description: Error response indicating that request structure does not compy with the specification
+                  value:
+                    status: malformed_request
+                    message: Malformed request
+        '401':
+          $ref: '#/paths/~1cases/get/responses/401'
+        '403':
+          $ref: '#/paths/~1cases/get/responses/403'
+        '404':
+          $ref: '#/paths/~1cases~1%7BcaseId%7D/delete/responses/404'
         '429':
           $ref: '#/paths/~1cases/get/responses/429'
         '500':
@@ -738,7 +867,7 @@ paths:
       tags:
         - media
       description: |
-        Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.
+        Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.  
       parameters:
         - name: layer
           description: 'An indication of the media layer. If omitted, it defaults to `unified`.'
@@ -755,8 +884,7 @@ paths:
           required: true
           example: original
         - name: accept
-          description: |
-            a [list of media types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) the client is willing to accept. If Accept is not specified, defaults to \*/*.  
+          description: 'A [list of media types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) the client is willing to accept. If Accept is not specified, defaults to \*/*.'
           in: header
           schema:
             type: string
@@ -1098,6 +1226,7 @@ paths:
                             - create
                             - delete
                             - update
+                            - mark-for-delete
                         target:
                           description: Indicates which feature of a resource is affected by the change
                           type: string
@@ -1175,10 +1304,12 @@ paths:
 components:
   securitySchemes:
     apiKeyAuth:
+      description: API key authorization scheme
       type: apiKey
       in: header
       name: x-api-key
     oAuth2AuthCode:
+      description: OAuth2 authorization scheme for production endpoint - only Authorization Code grant is supported for production configurations
       type: oauth2
       flows:
         authorizationCode:
@@ -1187,4 +1318,4 @@ components:
           scopes:
             openid: set OpenID context
             profile: OpenID profile
-            'urn:wkde:cwx:api': CaseWorx API scope
+            'urn:wkde:cwx:api': CWX API access

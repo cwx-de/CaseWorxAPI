@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 0.5.1
+  version: "0.6.0"
   title: 'CaseWorx API'
   termsOfService: https://www.wolterskluwer-online.de/informationen/datenschutz
   contact: 
@@ -18,6 +18,8 @@ servers:
     url: https://api.caseworx-baurecht.de/v0
 
 tags: 
+  - name: access-control
+    description: Operations on ACLs
   - name: cases
     description: Operations on cases
   - name: documents
@@ -27,9 +29,12 @@ tags:
   - name: changes
     description: Operations on changes (aka audit log)
   
-security: 
+security:
   - apiKeyAuth: []
-  - oAuth2AuthCode: []
+  - oAuth2AuthCode:
+    - openid
+    - profile
+    - urn:wkde:cwx:api    
 
 paths:
   /cases:
@@ -40,7 +45,7 @@ paths:
     get:
       tags: 
         - cases
-      description: Returns a collecion of all cases the user has access to
+      description: Returns a collection of all cases the user has access to
       responses:
         '200':
           description: Returns an array of cases
@@ -75,6 +80,7 @@ paths:
         '201':
           $ref: 'cwx-case-domain.yaml#/components/responses/CaseCreatedOK'
         '400':
+          # implementation: throw 400 if request parameters don't satisfy the validation criteria
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
         '401':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
@@ -116,6 +122,41 @@ paths:
         '500':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
 
+  /cases/{caseId}/acl:
+    parameters:
+      - $ref: 'cwx-case-domain.yaml#/components/parameters/CaseId'
+      - $ref: 'cwx-commons-domain.yaml#/components/parameters/CorrelationId'
+    
+    put:
+      tags: 
+        - access-control
+      description: |
+        Replace the Access Control List (ACL) of a case.  
+        This operation replaces the ACL of a case. All recipients must unequivocally resolve to existing user entities - each recipient must match exactly one existing user entity, otherwise an error will be returned and no changes to the ACL will be made.  
+        The access rights of the case owner cannot be changed - the owner has always read/write permissions. If the owner of the case is found on the recipients list, it will be ignored and no error will be raised.  
+        The user on whose behalf the request is executed must have write permission to the case.  
+        *Compliancy with GDPR*: this operation expects the API client to potentially send personal data as defined by the General Data Protection Regulation. The owner of the client application should ensure that an appropriate legal framework for personal data processing exists.
+      requestBody:
+        $ref: 'cwx-access_ctrl-domain.yaml#/components/requestBodies/SetAcl'
+      responses:
+        '201':
+          description: Confirms successful change of the case ACL
+          headers:
+            x-cwx-cid:
+              $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
+        '400':
+          $ref: 'cwx-access_ctrl-domain.yaml#/components/responses/SetAclError400'
+        '401':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
+        '403':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error403'
+        '404':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error404'
+        '429':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error429'
+        '500':
+          $ref: 'cwx-commons-domain.yaml#/components/responses/Error500'
+  
   /cases/changes:
     $ref: 'cwx-change-domain.yaml#/components/pathitems/Changes'
     
@@ -245,6 +286,7 @@ paths:
           headers:
             x-cwx-cid:
               $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
+
         '400':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
         '401':
@@ -269,7 +311,7 @@ paths:
       tags: 
         - media
       description: |
-        Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.
+        Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.  
       parameters:
         - $ref: 'cwx-media-domain.yaml#/components/parameters/LayerQueryRef'
         - $ref: 'cwx-media-domain.yaml#/components/parameters/Accept'
@@ -374,10 +416,13 @@ paths:
 components:
   securitySchemes:
     apiKeyAuth:
+      description: API key authorization scheme
       type: apiKey
       in: header
       name: x-api-key
+
     oAuth2AuthCode:
+      description: OAuth2 authorization scheme for production endpoint - only Authorization Code grant is supported for production configurations
       type: oauth2
       flows:
         authorizationCode:
@@ -386,4 +431,4 @@ components:
           scopes:
             openid: set OpenID context
             profile: OpenID profile
-            urn:wkde:cwx:api: CaseWorx API scope
+            urn:wkde:cwx:api: CWX API access

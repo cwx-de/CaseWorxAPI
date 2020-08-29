@@ -1,0 +1,126 @@
+openapi: 3.0.0
+info:
+  title: CaseWorx API - Access Control Domain
+  description: |
+    [CaseWorx](https://app.caseworx-baurecht.de/) API - Access Control Domain describing components of the ACL manipulation
+  version: 0.1.0
+  contact: 
+    name: Wolters Kluwer Deutschland GmbH
+    url: https://www.caseworx-baurecht.de/informationen/kontakt
+    email: caseworx@wolterskluwer.com
+  license:
+    name: GNU Affero General Public License version 3
+    url: https://www.gnu.org/licenses/agpl-3.0.html
+
+components:
+  schemas:
+    Recipient:
+      description: recipient of permissions
+      type: object
+      properties:
+        email:
+          description: email address of the recipient
+          type: string
+      required:
+        - email
+    
+    Permissions:
+          description: permissions to be grantes
+          type: object
+          properties:
+            read:
+              description: grants read access if set to true
+              type: boolean
+            write:
+              description: grants write access if set to true, requires read set to true as well, write access cannot be granted without read access; defaults to false
+              type: boolean
+          required:
+            - read    
+    Ace:
+      description: access control list entry
+      type: object
+      properties:
+        recipient:
+          $ref: '#/components/schemas/Recipient'
+        permissions:
+          $ref: '#/components/schemas/Permissions'
+      required:
+       - recipient
+       - permissions
+
+    Acl:
+      description: access control list
+      type: array
+      items:
+        $ref: '#/components/schemas/Ace'
+      minItems: 1
+      
+    SetAclError:
+      description: error model extension to provide list of recipients causing the request to fail
+      allOf:
+        - $ref: 'cwx-commons-domain.yaml#/components/schemas/Error'
+        - type: object
+          properties:
+            recipients:
+              type: array
+              items:
+                $ref: '#/components/schemas/Recipient'
+              minItems: 1
+      
+  requestBodies:
+    SetAcl:
+      description: ACL to create
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Acl'
+          examples:
+            acl:
+              description: ACL that grants read/write access to Alice and read-only access to Bob
+              value:
+                - recipient:
+                    email: alice@caseworx-baurecht.de
+                  permissions:
+                    read: true
+                    write: true
+                - recipient:
+                    email: bob@caseworx-baurecht.de
+                  permissions:
+                    read: true
+
+  responses:
+    SetAclError400:
+      description: |
+        Request cannot be processed  
+        `status`: `malformed_request`  
+        Request structure does not comply with the specification.
+        `status`: `invalid_recipient`  
+        The response includes a `recipients` array listing the requested recipients that prevent the request from being serviced successfully. It will happen if the recipients cannot be mapped to known user entities. The client may choose to remove the offending recipients and repeat the request.  
+        `status`: `inconsistent_permissions`  
+        Requested permissions conflict with the business rules. It will happen if write permission is requested without read permission. Client may repeat the request after correcting permissions.
+      headers:
+        x-cwx-cid:
+          $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SetAclError'
+          examples:
+            invalid_recipient:
+              description: Error response enumerating Jane and John as unknown to CaseWorx thus preventing a successful ACL change
+              value:
+                status: invalid_recipient
+                message: One or more ACEs contain recipients that cannot be resolved
+                recipients:
+                  - email: jane@caseworx-baurecht.de
+                  - email: john@caseworx-baurecht.de
+            inconsistent_permissions:
+              description: Error response indicating requested permissions violating business rules
+              value:
+                status: inconsistent_permissions
+                message: One or more ACEs contain permissions that conflict with the business rules
+            malformed_request:
+              description: Error response indicating that request structure does not compy with the specification
+              value:
+                status: malformed_request
+                message: Malformed request

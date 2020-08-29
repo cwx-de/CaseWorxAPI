@@ -3,7 +3,7 @@ info:
   title: CaseWorx API - Case Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Case Domain describing components of the case
-  version: 0.1.1
+  version: "0.2.0"
   contact: 
     name: Wolters Kluwer Deutschland GmbH
     url: https://www.caseworx-baurecht.de/informationen/kontakt
@@ -57,8 +57,7 @@ components:
           minLength: 1
           example: 'John Doe'
         description:
-          description: |
-            Description of a case / Kurzbeschreibung  
+          description: Description of a case / Kurzbeschreibung  
           type: string
           minLength: 1
           maxLength: 300
@@ -109,8 +108,7 @@ components:
 
   responses:
     CaseCreatedOK:
-      description: |
-        New case item successfully added.  
+      description: New case item successfully added.  
       headers:
         x-cwx-cid:
           $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
