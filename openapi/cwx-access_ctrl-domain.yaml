@@ -65,6 +65,7 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Recipient'
+              minItems: 1
       
   requestBodies:
     SetAcl:
@@ -91,10 +92,12 @@ components:
     SetAclError400:
       description: |
         Request cannot be processed  
-        `code`: `invalid_recipient`  
+        `status`: `malformed_request`  
+        Request structure does not comply with the specification.
+        `status`: `invalid_recipient`  
         The response includes a `recipients` array listing the requested recipients that prevent the request from being serviced successfully. It will happen if the recipients cannot be mapped to known user entities. The client may choose to remove the offending recipients and repeat the request.  
-        `code`: `inconsistent_permissions`  
-        Requested permissions conflict with the business rules. It will happen if write permission is requested without read permission.
+        `status`: `inconsistent_permissions`  
+        Requested permissions conflict with the business rules. It will happen if write permission is requested without read permission. Client may repeat the request after correcting permissions.
       headers:
         x-cwx-cid:
           $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
@@ -106,7 +109,7 @@ components:
             invalid_recipient:
               description: Error response enumerating Jane and John as unknown to CaseWorx thus preventing a successful ACL change
               value:
-                code: invalid_recipient
+                status: invalid_recipient
                 message: One or more ACEs contain recipients that cannot be resolved
                 recipients:
                   - email: jane@caseworx-baurecht.de
@@ -114,5 +117,10 @@ components:
             inconsistent_permissions:
               description: Error response indicating requested permissions violating business rules
               value:
-                code: inconsistent_permissions
+                status: inconsistent_permissions
                 message: One or more ACEs contain permissions that conflict with the business rules
+            malformed_request:
+              description: Error response indicating that request structure does not compy with the specification
+              value:
+                status: malformed_request
+                message: Malformed request

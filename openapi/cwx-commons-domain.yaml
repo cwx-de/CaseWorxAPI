@@ -32,6 +32,10 @@ components:
       type: object
       properties:
         code:
+          deprecated: true
+          type: integer
+          example: 100000
+        status:
           type: string
           example: some_error
         message:
@@ -45,9 +49,6 @@ components:
       required: 
         - message
 
-  ####################
-  # Common parameters
-  ####################
   parameters:
     CorrelationId:
       name: x-cwx-cid
@@ -57,18 +58,6 @@ components:
       schema:
         $ref: '#/components/schemas/UniversalId'
       example: b50ef924-2c29-4097-904b-ab2fb286e3bb
-
-  #######################
-  # Common request bodies
-  #######################
-  # requestBodies:
-  #   NewItem:
-  #     description: A JSON object containing item data
-  #     required: true
-  #     content:
-  #       application/json:
-  #         schema:
-  #           type: object
 
   responses:
     Info202:
@@ -84,7 +73,7 @@ components:
           schema:
             $ref: '#/components/schemas/Error'  # Error schema fits here, striclty speaking this is not an error
           example:
-            code: resource_not_ready
+            status: resource_not_ready
             message: Requested media of the document resource {documentId} is not ready
             hint: Requested resource exists but it has not yet reached the state in its lifecycle where the requested criteria are satisfied. It may or may not reach this state in the future.
     Error400:
@@ -150,16 +139,6 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
 
-  #     headers:
-  #       X-RateLimit-Limit:
-  #         $ref: '#/components/headers/X-RateLimit-Limit'
-  #       X-RateLimit-Remaining:
-  #         $ref: '#/components/headers/X-RateLimit-Remaining'
-
-  #########################
-  # Common headers
-  # (except request headers - they are defined as parameters)
-  #########################
   headers:
     x-cwx-cid:
       description: Correlation ID
@@ -167,52 +146,3 @@ components:
       schema:
         $ref: '#/components/schemas/UniversalId'
       example: b50ef924-2c29-4097-904b-ab2fb286e3bb
-
-  #######################
-  # Common path items
-  #######################
-  # pathitems:
-  #   EntityOperations:
-  #     get:
-  #       summary: Get all items
-  #       description: This operation supports pagination
-  #       parameters:
-  #         - $ref: '#/components/parameters/offsetParam'
-  #         - $ref: '#/components/parameters/limitParam'
-  #       responses:
-  #         '200':
-  #           description: A list of items
-  #         default:
-  #           $ref: '#/components/responses/GeneralError'
-  #     post:
-  #       summary: Add a new item
-  #       requestBody:
-  #         $ref: '#/components/requestBodies/NewItem'
-  #       responses:
-  #         '201':
-  #           description: Created
-
-  ######################################
-  # Common examples of input/output data
-  ######################################
-  # examples:
-  #   tshirt:
-  #     summary: Sample T-shirt data
-  #     value:
-  #       # Example value starts here
-  #       id: 17
-  #       name: T-shirt
-  #       description: 100% cotton shirt
-  #       categories: [clothes]
-
-  #########################
-  # Common link definitions
-  # See: https://swagger.io/docs/specification/links/
-  #########################
-  # links: {}
-
-  #########################
-  # Common callback definitions
-  # See: https://swagger.io/docs/specification/callbacks/
-  #########################
-  # callbacks: {}

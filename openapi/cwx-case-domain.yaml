@@ -57,9 +57,7 @@ components:
           minLength: 1
           example: 'John Doe'
         description:
-          description: |
-            Description of a case / Kurzbeschreibung  
-            [BAUM-2156](https://jira.wolterskluwer.io/jira/browse/BAUM-2156) - v0.0.5 returns empty string or null, minLength is not honored
+          description: Description of a case / Kurzbeschreibung  
           type: string
           minLength: 1
           maxLength: 300
@@ -110,9 +108,7 @@ components:
 
   responses:
     CaseCreatedOK:
-      description: |
-        New case item successfully added.  
-        [BAUM-2157](https://jira.wolterskluwer.io/jira/browse/BAUM-2157) v0.0.5 returns the created object in response body.
+      description: New case item successfully added.  
       headers:
         x-cwx-cid:
           $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'

@@ -28,9 +28,6 @@ components:
       
     SupportedMediaTypes:
       description: Enumeration of supported content types that document media can be uploaded in
-      externalDocs:
-        description: Supported Media Types
-        url: https://confluence.wolterskluwer.io/display/WKBAUM/Supported+Media+Types
       type: string
       enum:
         - application/pdf
@@ -98,13 +95,6 @@ components:
       schema:
         type: string
       required: true
-      # implementation: 
-      # 1. tokenize content-disposition using ';'
-      # 2. first token must match 'attachment'
-      # 3. in the remaining tokens find one that starts with 'filename*=' and process
-      # 4. if 'filename*' not found try 'filename=' and process
-      # 5. if neither found - fire 400 error
-      # all string matches are case insensitive
       example: attachment; filename*=utf-8''d%C3%A9j%C3%A0vu.pdf    
 
     ContentLength:
@@ -140,9 +130,7 @@ components:
           
     Accept:
       name: accept
-      description: |
-        a [list of media types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) the client is willing to accept. If Accept is not specified, defaults to \*/*.  
-        [BAUM-2172](https://jira.wolterskluwer.io/jira/browse/BAUM-2172) - in v0.0.5 the request is serviced regardless of the Accept header value
+      description: A [list of media types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) the client is willing to accept. If Accept is not specified, defaults to \*/*.  
       in: header
       schema:
         type: string
@@ -185,10 +173,6 @@ components:
                 example: myMedia.pdf
               contentType:
                 '$ref': '#/components/schemas/SupportedMediaTypes'
-                # description: Media content type
-                # type: string
-                # minLength: 1
-                # example: application/pdf
               contentLength:
                 description: Length of the entire media object in bytes, for partial upload the media size should be greater than 4MB (4194304 bytes). For smaller media use simple upload.
                 type: integer
@@ -198,7 +182,6 @@ components:
     SimpleMediaUpload:
       description: |
         Document body for upload. The document size limit is 4MB (4194304 bytes), for larger documents HTTP 413 is returned. Partial upload will be added later.  
-        [BAUM-2173](https://jira.wolterskluwer.io/jira/browse/BAUM-2173) - under certain conditions HTTP 500 may be returned; the response body may not adhere to the specification
       content:
         application/pdf:
           schema:
@@ -290,8 +273,6 @@ components:
           schema:
             type: string
             example: https://api.caseworx-baurecht.de/v0/cases/12345/documents/567890
-          # implementation: MUST return a URL to the created document resource.
-          # implementation: MUST create a document resource skeleton before returning response such that  GET cases/{caseId}}/documents/{documentId} will respond with minimal set of metadata (id, filename, created, updated) even before it's processed via OCR and tagging.
           required: true
 
     SimpleMediaDownloadOK:
@@ -309,7 +290,6 @@ components:
           description: An [indication of how the returned content should be handled](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition). Filename must be specified. See [RFC6266 sec. 4.3](https://tools.ietf.org/html/rfc6266#section-4.3) for handling characters outside of ISO-8859-1.
           schema:
             type: string
-          # implementation: use 'filename*=' disposition type if the filename contains characters outside of ISO-8859-1 with url-encoding
           example: 'attachment; filename="mydocument.pdf"'
           required: true
       content:
@@ -331,7 +311,6 @@ components:
           description: An [indication of how the returned content should be handled](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition). Filename must be specified. See [RFC6266 sec. 4.3](https://tools.ietf.org/html/rfc6266#section-4.3) for handling characters outside of ISO-8859-1. The filename is that of the media object uploaded to the system.
           schema:
             type: string
-          # implementation: use 'filename*=' disposition type if the filename contains characters outside of ISO-8859-1 with url-encoding
           required: true
           example: 'attachment; filename="mydocument.pdf"'
         content-range:
@@ -362,8 +341,6 @@ components:
           schema:
             type: string
             example: https://api.caseworx-baurecht.de/v0/uploads/wnxwnikxiuwu0u3jd
-          # implementation: MUST return a URL to the created upload manager resource.
-          # implementation: generate ID with uuid or crypto.randomBytes and check that it's not used to be sure
           required: true
       content:
         'application/json':
@@ -380,7 +357,6 @@ components:
                 minLength: 1
                 example: https://api.caseworx-baurecht.de/v0/uploads/12345
               expires:
-                # implementation: set expires to 24 hrs after upload creation
                 description: Expiration date and time of the upload manager resource. After this time the resource cannot be used. All parts of an unfinished upload will be destroyed.
                 type: string
                 format: date-time
@@ -396,9 +372,6 @@ components:
           schema:
             type: string
             example: https://api.caseworx-baurecht.de/v0/cases/12345/documents/567890
-          # implementation: MUST terminate the upload resource. Any new request to upload media part using this uploadId MUST result in HTTP 404.
-          # implementation: MUST return a URL to the created document resource.
-          # implementation: MUST create a document resource skeleton before returning response such that  GET cases/{caseId}}/documents/{documentId} will respond with minimal set of metadata (id, filename, created, updated) even before it's processed via OCR and tagging.
           required: true
           
     Error406:
