@@ -1,6 +1,11 @@
 # Change Log
 ------------
 
+## CaseWorx API v0.6.0
+----------------------
+- added support for setting Access Control List on a case
+- added property `status` to the Error schema, `code` is now deprecated
+
 ## CaseWorx API v0.5.1
 ----------------------
 - bugfix release
@@ -33,7 +38,7 @@
 ### Added
 - Restructured API definition
 - Added delete operations on a case and a document
-- Added suport for partial upload and download
+- Added support for partial upload and download
 
 ### Changed
 - Simple media upload/download request size limit decreased to 4MB
