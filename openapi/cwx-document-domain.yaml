@@ -307,5 +307,36 @@ components:
     DocumentMetadataList:
       description: List of document entities with their properties
       value: 
-        - $ref: '#/components/examples/RawDocumentMetadata/value'
-        - $ref: '#/components/examples/EnrichedDocumentMetadata/value'
+        - id: 12345
+          state: original
+          filaneme: myFile.pdf
+        - id: 67890
+          state: enriched
+          filaneme: myAnoterFile.pdf
+          title: My test document title
+          date: 2019-12-02
+          types:
+            - 'Fax'
+            - 'Complaint'
+          parties:
+            - 'John Doe'
+            - 'Acme Corp.'
+          trades:
+            - 'plumbing'
+            - 'masonery'
+          defects:
+            - 122562
+            - 122680
+          tags:
+            - 'to do'
+            - 'easy win'
+          suggestions:
+            descriptions:
+              - Mangel Nr. 122562
+              - Mangel Nr. 122680
+            identifiers:
+              - "122562"
+              - "122680"
+            refs:
+              - 12345
+              - 67890

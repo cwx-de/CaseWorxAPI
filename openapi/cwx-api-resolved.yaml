@@ -440,8 +440,39 @@ paths:
                 list:
                   description: List of document entities with their properties
                   value:
-                    - $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents~1%7BdocumentId%7D/get/responses/200/content/application~1json/examples/raw/value'
-                    - $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents~1%7BdocumentId%7D/get/responses/200/content/application~1json/examples/enriched/value'
+                    - id: 12345
+                      state: original
+                      filaneme: myFile.pdf
+                    - id: 67890
+                      state: enriched
+                      filaneme: myAnoterFile.pdf
+                      title: My test document title
+                      date: 2019-12-02T00:00:00.000Z
+                      types:
+                        - Fax
+                        - Complaint
+                      parties:
+                        - John Doe
+                        - Acme Corp.
+                      trades:
+                        - plumbing
+                        - masonery
+                      defects:
+                        - 122562
+                        - 122680
+                      tags:
+                        - to do
+                        - easy win
+                      suggestions:
+                        descriptions:
+                          - Mangel Nr. 122562
+                          - Mangel Nr. 122680
+                        identifiers:
+                          - '122562'
+                          - '122680'
+                        refs:
+                          - 12345
+                          - 67890
         '400':
           $ref: '#/paths/~1cases/get/responses/400'
         '401':
