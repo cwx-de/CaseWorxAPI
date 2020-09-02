@@ -2,22 +2,37 @@ openapi: 3.0.0
 info:
   title: CaseWorx API - Document Domain
   description: |
-    [CaseWorx](https://app.caseworx-baurecht.de/) API - Document Domain describing components of the case
-  version: '0.0.1'
-  license: 
-    name: GNU Affero General Public License v3.0
-    url: https://www.gnu.org/licenses/agpl-3.0.html
-  contact:
-    name: CaseWorx Support
+    [CaseWorx](https://app.caseworx-baurecht.de/) API - Document Domain describing components of the case  
+  version: 0.1.0
+  contact: 
+    name: Wolters Kluwer Deutschland GmbH
+    url: https://www.caseworx-baurecht.de/informationen/kontakt
     email: caseworx@wolterskluwer.com
+  license:
+    name: GNU Affero General Public License version 3
+    url: https://www.gnu.org/licenses/agpl-3.0.html
 
 components:
   schemas:
+    DocumentState:
+      description: State of the document in the document lifecycle
+      readOnly: true
+      type: string
+      enum:
+        - original
+        - unified
+        - autoenriched
+        - enriched
+        - annotated
+      example: original
+
     DocumentRaw:
       description: Properties of original (not enriched) document 
       type: object
       required:
         - id
+        - state
+        - filename
       properties:
         id:
           description: Internal ID of the document
@@ -26,6 +41,8 @@ components:
           minimum: 0
           readOnly: true
           example: 67890
+        state:
+          $ref: '#/components/schemas/DocumentState'
         filename:
           description: Filename under which the document's media have been registered during upload
           type: string
@@ -209,3 +226,86 @@ components:
         format: int64
         minimum: 0
       example: 67890
+  
+  responses:
+    DocumentMetadataOK:
+      description: Returns properties of a document
+      headers:
+        x-cwx-cid:
+          $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
+      content:
+        application/json:
+          schema:
+            anyOf:
+              - $ref: '#/components/schemas/DocumentRaw'
+              - $ref: '#/components/schemas/Document'
+          examples:
+            raw:
+              $ref: '#/components/examples/RawDocumentMetadata'
+            enriched:
+              $ref: '#/components/examples/EnrichedDocumentMetadata'
+    
+    DocumentMetadataListOK:
+      description: Returns an array of documents in a case with available properties
+      headers:
+        x-cwx-cid:
+          $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              anyOf:
+                - $ref: '#/components/schemas/DocumentRaw'
+                - $ref: '#/components/schemas/Document'
+          examples:
+            list:
+              $ref: '#/components/examples/DocumentMetadataList'
+  
+  examples:
+    RawDocumentMetadata:
+      description: Document metadata when the document is in unenriched state of the life cycle
+      value: 
+        id: 12345
+        state: original
+        filaneme: myFile.pdf
+        
+    EnrichedDocumentMetadata:
+      description: Document metadata when the document is in enriched state of the life cycle
+      value: 
+        id: 67890
+        state: enriched
+        filaneme: myAnoterFile.pdf
+        title: My test document title
+        date: 2019-12-02
+        types:
+          - 'Fax'
+          - 'Complaint'
+        parties:
+          - 'John Doe'
+          - 'Acme Corp.'
+        trades:
+          - 'plumbing'
+          - 'masonery'
+        defects:
+          - 122562
+          - 122680
+        tags:
+          - 'to do'
+          - 'easy win'
+        suggestions:
+          descriptions:
+            - Mangel Nr. 122562
+            - Mangel Nr. 122680
+          identifiers:
+            - "122562"
+            - "122680"
+          refs:
+            - 12345
+            - 67890
+    
+    DocumentMetadataList:
+      description: List of document entities with their properties
+      value: 
+        - $ref: '#/components/examples/RawDocumentMetadata/value'
+        - $ref: '#/components/examples/EnrichedDocumentMetadata/value'

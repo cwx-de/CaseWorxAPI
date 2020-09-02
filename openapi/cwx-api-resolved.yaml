@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 0.6.0
+  version: 0.7.0
   title: CaseWorx API
   termsOfService: 'https://www.wolterskluwer-online.de/informationen/datenschutz'
   contact:
@@ -421,7 +421,7 @@ paths:
     get:
       tags:
         - documents
-      description: 'Returns selected properties of documents in a case. At present `id`, `title`, `date` and `types` are returned. Implementation may return other properties as well. Proper partial response will be implemented later. If a particular document exists only in its raw layer (not enriched) only `id` is returned.'
+      description: 'Returns selected properties of documents in a case. At present `id`, `title`, `date`, `filename`, `state` and `types` are returned. Implementation may return other properties as well. Proper partial response will be implemented later. If a particular document exists only in its raw layer (not enriched) only `id`, `filename` and `state` is returned.'
       responses:
         '200':
           description: Returns an array of documents in a case with available properties
@@ -436,6 +436,12 @@ paths:
                   anyOf:
                     - $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents~1%7BdocumentId%7D/get/responses/200/content/application~1json/schema/anyOf/0'
                     - $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents~1%7BdocumentId%7D/get/responses/200/content/application~1json/schema/anyOf/1'
+              examples:
+                list:
+                  description: List of document entities with their properties
+                  value:
+                    - $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents~1%7BdocumentId%7D/get/responses/200/content/application~1json/examples/raw/value'
+                    - $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents~1%7BdocumentId%7D/get/responses/200/content/application~1json/examples/enriched/value'
         '400':
           $ref: '#/paths/~1cases/get/responses/400'
         '401':
@@ -645,6 +651,8 @@ paths:
                     type: object
                     required:
                       - id
+                      - state
+                      - filename
                     properties:
                       id:
                         description: Internal ID of the document
@@ -653,6 +661,17 @@ paths:
                         minimum: 0
                         readOnly: true
                         example: 67890
+                      state:
+                        description: State of the document in the document lifecycle
+                        readOnly: true
+                        type: string
+                        enum:
+                          - original
+                          - unified
+                          - autoenriched
+                          - enriched
+                          - annotated
+                        example: original
                       filename:
                         description: Filename under which the document's media have been registered during upload
                         type: string
@@ -822,6 +841,46 @@ paths:
                                   refs:
                                     - 12345
                                     - 67890
+              examples:
+                raw:
+                  description: Document metadata when the document is in unenriched state of the life cycle
+                  value:
+                    id: 12345
+                    state: original
+                    filaneme: myFile.pdf
+                enriched:
+                  description: Document metadata when the document is in enriched state of the life cycle
+                  value:
+                    id: 67890
+                    state: enriched
+                    filaneme: myAnoterFile.pdf
+                    title: My test document title
+                    date: 2019-12-02T00:00:00.000Z
+                    types:
+                      - Fax
+                      - Complaint
+                    parties:
+                      - John Doe
+                      - Acme Corp.
+                    trades:
+                      - plumbing
+                      - masonery
+                    defects:
+                      - 122562
+                      - 122680
+                    tags:
+                      - to do
+                      - easy win
+                    suggestions:
+                      descriptions:
+                        - Mangel Nr. 122562
+                        - Mangel Nr. 122680
+                      identifiers:
+                        - '122562'
+                        - '122680'
+                      refs:
+                        - 12345
+                        - 67890
         '400':
           $ref: '#/paths/~1cases/get/responses/400'
         '401':
