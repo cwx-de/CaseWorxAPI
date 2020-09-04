@@ -1,6 +1,10 @@
 # Change Log
 ------------
 
+## CaseWorx API v0.7.1
+----------------------
+- remove `mark-for-delete` from `Change` schema, `action` enum (CwxChangeDomain v0.2.1)
+
 ## CaseWorx API v0.7.0
 ----------------------
 - added properties `state` and `filename` to responses to /cases/{caseId}/documents and /cases/{caseId}/documents/{documentId}
