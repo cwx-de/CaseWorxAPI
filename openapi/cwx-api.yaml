@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: "0.6.0"
+  version: 0.7.1
   title: 'CaseWorx API'
   termsOfService: https://www.wolterskluwer-online.de/informationen/datenschutz
   contact: 
@@ -168,26 +168,14 @@ paths:
       - $ref: 'cwx-case-domain.yaml#/components/parameters/CaseId'
       - $ref: 'cwx-commons-domain.yaml#/components/parameters/CorrelationId'
 
-
     # -------- List selected properties of all documents in a case --------
     get:
       tags:
         - documents
-      description: Returns selected properties of documents in a case. At present `id`, `title`, `date` and `types` are returned. Implementation may return other properties as well. Proper partial response will be implemented later. If a particular document exists only in its raw layer (not enriched) only `id` is returned.
+      description: Returns selected properties of documents in a case. At present `id`, `title`, `date`, `filename`, `state` and `types` are returned. Implementation may return other properties as well. Proper partial response will be implemented later. If a particular document exists only in its raw layer (not enriched) only `id`, `filename` and `state` is returned.
       responses:
         '200':
-          description: Returns an array of documents in a case with available properties
-          headers:
-            x-cwx-cid:
-              $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  anyOf:
-                    - $ref: 'cwx-document-domain.yaml#/components/schemas/DocumentRaw'
-                    - $ref: 'cwx-document-domain.yaml#/components/schemas/Document'
+          $ref: 'cwx-document-domain.yaml#/components/responses/DocumentMetadataListOK'
         '400':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
         '401':
@@ -249,17 +237,7 @@ paths:
       description: Returns properties of a document
       responses:
         '200':
-          description: Returns properties of a document
-          headers:
-            x-cwx-cid:
-              $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
-          content:
-            application/json:
-              schema:
-                anyOf:
-                  - $ref: 'cwx-document-domain.yaml#/components/schemas/DocumentRaw'
-                  - $ref: 'cwx-document-domain.yaml#/components/schemas/Document'
-
+          $ref: 'cwx-document-domain.yaml#/components/responses/DocumentMetadataOK'
         '400':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
         '401':
