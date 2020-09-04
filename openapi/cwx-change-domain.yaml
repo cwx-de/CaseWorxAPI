@@ -3,7 +3,7 @@ info:
   title: CaseWorx API - Change Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Change Domain describing shared components of the API
-  version: "0.2.0"
+  version: 0.2.1
   contact: 
     name: Wolters Kluwer Deutschland GmbH
     url: https://www.caseworx-baurecht.de/informationen/kontakt
@@ -39,7 +39,6 @@ components:
             - create
             - delete
             - update
-            - mark-for-delete
         target:
           description: Indicates which feature of a resource is affected by the change
           type: string
