@@ -1,6 +1,10 @@
 # Change Log
 ------------
 
+## CaseWorx API v0.7.0
+----------------------
+- added properties `state` and `filename` to responses to /cases/{caseId}/documents and /cases/{caseId}/documents/{documentId}
+
 ## CaseWorx API v0.6.0
 ----------------------
 - added support for setting Access Control List on a case
