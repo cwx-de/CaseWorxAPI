@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 0.7.1
+  version: 0.8.0
   title: CaseWorx API
   termsOfService: 'https://www.wolterskluwer-online.de/informationen/datenschutz'
   contact:
@@ -12,9 +12,18 @@ info:
     url: 'https://www.gnu.org/licenses/agpl-3.0.html'
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API
+externalDocs:
+  description: Change log
+  url: 'https://confluence.wolterskluwer.io/display/WKBAUM/CWX+API'
 servers:
-  - description: Production environment
+  - description: Production environment (use oAuth2AuthCodePrd security schema)
     url: 'https://api.caseworx-baurecht.de/v0'
+  - description: Staging environment (use oAuth2AuthCodeNonPrd security schema)
+    url: 'https://api-stg.caseworx-baurecht.de/v0'
+  - description: QA environment (use oAuth2AuthCodeNonPrd security schema)
+    url: 'https://api-qa.caseworx-baurecht.de/v0'
+  - description: Dev environment (use oAuth2AuthCodeNonPrd security schema)
+    url: 'https://api-labs.caseworx-baurecht.de/v0'
 tags:
   - name: access-control
     description: Operations on ACLs
@@ -29,6 +38,18 @@ tags:
 security:
   - apiKeyAuth: []
   - oAuth2AuthCode:
+      - openid
+      - profile
+      - 'urn:wkde:cwx:api'
+  - oAuth2AuthCodeNonPrd:
+      - openid
+      - profile
+      - 'urn:wkde:cwx:api'
+  - oAuth2RopcPrd:
+      - openid
+      - profile
+      - 'urn:wkde:cwx:api'
+  - oAuth2RopcNonPrd:
       - openid
       - profile
       - 'urn:wkde:cwx:api'
@@ -421,7 +442,7 @@ paths:
     get:
       tags:
         - documents
-      description: 'Returns selected properties of documents in a case. At present `id`, `title`, `date`, `filename`, `state` and `types` are returned. Implementation may return other properties as well. Proper partial response will be implemented later. If a particular document exists only in its raw layer (not enriched) only `id`, `filename` and `state` is returned.'
+      description: 'Returns selected properties of documents in a case. At present `id`, `title`, `date` and `types` are returned. Implementation may return other properties as well. Proper partial response will be implemented later. If a particular document exists only in its raw layer (not enriched) only `id` is returned.'
       responses:
         '200':
           description: Returns an array of documents in a case with available properties
@@ -436,43 +457,6 @@ paths:
                   anyOf:
                     - $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents~1%7BdocumentId%7D/get/responses/200/content/application~1json/schema/anyOf/0'
                     - $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents~1%7BdocumentId%7D/get/responses/200/content/application~1json/schema/anyOf/1'
-              examples:
-                list:
-                  description: List of document entities with their properties
-                  value:
-                    - id: 12345
-                      state: original
-                      filaneme: myFile.pdf
-                    - id: 67890
-                      state: enriched
-                      filaneme: myAnoterFile.pdf
-                      title: My test document title
-                      date: 2019-12-02T00:00:00.000Z
-                      types:
-                        - Fax
-                        - Complaint
-                      parties:
-                        - John Doe
-                        - Acme Corp.
-                      trades:
-                        - plumbing
-                        - masonery
-                      defects:
-                        - 122562
-                        - 122680
-                      tags:
-                        - to do
-                        - easy win
-                      suggestions:
-                        descriptions:
-                          - Mangel Nr. 122562
-                          - Mangel Nr. 122680
-                        identifiers:
-                          - '122562'
-                          - '122680'
-                        refs:
-                          - 12345
-                          - 67890
         '400':
           $ref: '#/paths/~1cases/get/responses/400'
         '401':
@@ -872,46 +856,6 @@ paths:
                                   refs:
                                     - 12345
                                     - 67890
-              examples:
-                raw:
-                  description: Document metadata when the document is in unenriched state of the life cycle
-                  value:
-                    id: 12345
-                    state: original
-                    filaneme: myFile.pdf
-                enriched:
-                  description: Document metadata when the document is in enriched state of the life cycle
-                  value:
-                    id: 67890
-                    state: enriched
-                    filaneme: myAnoterFile.pdf
-                    title: My test document title
-                    date: 2019-12-02T00:00:00.000Z
-                    types:
-                      - Fax
-                      - Complaint
-                    parties:
-                      - John Doe
-                      - Acme Corp.
-                    trades:
-                      - plumbing
-                      - masonery
-                    defects:
-                      - 122562
-                      - 122680
-                    tags:
-                      - to do
-                      - easy win
-                    suggestions:
-                      descriptions:
-                        - Mangel Nr. 122562
-                        - Mangel Nr. 122680
-                      identifiers:
-                        - '122562'
-                        - '122680'
-                      refs:
-                        - 12345
-                        - 67890
         '400':
           $ref: '#/paths/~1cases/get/responses/400'
         '401':
@@ -1115,9 +1059,10 @@ paths:
                 contentType:
                   $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/parameters/2/schema'
                 contentLength:
-                  description: 'Length of the entire media object in bytes, for partial upload the media size should be greater than 4MB (4194304 bytes). For smaller media use simple upload.'
+                  description: 'Length of the entire media object in bytes, for partial upload the media size should be greater than 4MB (4194304 bytes). For smaller media use simple upload. Maximum size of the media object is 60MB (62914560 bytes)'
                   type: integer
-                  minimum: 4194304
+                  minimum: 4194305
+                  maximum: 62914560
                   example: 6000000
       responses:
         '201':
@@ -1406,5 +1351,36 @@ components:
           tokenUrl: 'https://login.wolterskluwer.eu/as/token.oauth2'
           scopes:
             openid: set OpenID context
+            profile: OpenID profile
+            'urn:wkde:cwx:api': CWX API access
+    oAuth2AuthCodeNonPrd:
+      description: OAuth2 authorization scheme for non-production endpoints (Authorization Code grant)
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: 'https://login-stg.wolterskluwer.eu/as/authorization.oauth2?pfidpadapterid=JurionCompositeAdapter'
+          tokenUrl: 'https://login-stg.wolterskluwer.eu/as/token.oauth2'
+          scopes:
+            openid: OpenID context
+            profile: OpenID profile
+            'urn:wkde:cwx:api': CWX API access
+    oAuth2RopcPrd:
+      description: 'OAuth2 authorization scheme for production endpoint (ROPC grant) - only for testing, never for user-facing clients'
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: 'https://login.wolterskluwer.eu/as/token.oauth2?pfidpadapterid=JurionCompositeAdapter'
+          scopes:
+            openid: OpenID context
+            profile: OpenID profile
+            'urn:wkde:cwx:api': CWX API access
+    oAuth2RopcNonPrd:
+      description: OAuth2 authorization scheme for non-production endpoints (ROPC grant)
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: 'https://login-stg.wolterskluwer.eu/as/token.oauth2?pfidpadapterid=JurionCompositeAdapter'
+          scopes:
+            openid: OpenID context
             profile: OpenID profile
             'urn:wkde:cwx:api': CWX API access

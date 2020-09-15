@@ -3,7 +3,7 @@ info:
   title: CaseWorx API - Media Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Media Domain describing shared components of the API
-  version: "0.2.0"
+  version: 0.3.0
   contact: 
     name: Wolters Kluwer Deutschland GmbH
     url: https://www.caseworx-baurecht.de/informationen/kontakt
@@ -174,9 +174,10 @@ components:
               contentType:
                 '$ref': '#/components/schemas/SupportedMediaTypes'
               contentLength:
-                description: Length of the entire media object in bytes, for partial upload the media size should be greater than 4MB (4194304 bytes). For smaller media use simple upload.
+                description: Length of the entire media object in bytes, for partial upload the media size should be greater than 4MB (4194304 bytes). For smaller media use simple upload. Maximum size of the media object is 60MB (62914560 bytes)
                 type: integer
-                minimum: 4194304
+                minimum: 4194305
+                maximum: 62914560
                 example: 6000000
 
     SimpleMediaUpload:
