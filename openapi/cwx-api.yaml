@@ -13,19 +13,9 @@ info:
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API
 
-externalDocs:
-  description: Change log
-  url: https://confluence.wolterskluwer.io/display/WKBAUM/CWX+API
-    
 servers:
-  - description: Production environment (use oAuth2AuthCodePrd security schema)
+  - description: Production environment
     url: https://api.caseworx-baurecht.de/v0
-  - description: Staging environment (use oAuth2AuthCodeNonPrd security schema)
-    url: https://api-stg.caseworx-baurecht.de/v0
-  - description: QA environment (use oAuth2AuthCodeNonPrd security schema)
-    url: https://api-qa.caseworx-baurecht.de/v0
-  - description: Dev environment (use oAuth2AuthCodeNonPrd security schema)
-    url: https://api-labs.caseworx-baurecht.de/v0
 
 tags: 
   - name: access-control
@@ -42,20 +32,6 @@ tags:
 security:
   - apiKeyAuth: []
   - oAuth2AuthCode:
-    - openid
-    - profile
-    - urn:wkde:cwx:api    
-
-  # the security schemes below are to be used for development and testing, never on production
-  - oAuth2AuthCodeNonPrd:
-    - openid
-    - profile
-    - urn:wkde:cwx:api    
-  - oAuth2RopcPrd:
-    - openid
-    - profile
-    - urn:wkde:cwx:api    
-  - oAuth2RopcNonPrd:
     - openid
     - profile
     - urn:wkde:cwx:api    
@@ -454,38 +430,5 @@ components:
           tokenUrl: 'https://login.wolterskluwer.eu/as/token.oauth2'
           scopes:
             openid: set OpenID context
-            profile: OpenID profile
-            urn:wkde:cwx:api: CWX API access
-
-    # non-production schemes - only for development and testing
-    oAuth2AuthCodeNonPrd:
-      description: OAuth2 authorization scheme for non-production endpoints (Authorization Code grant)
-      type: oauth2
-      flows:
-        authorizationCode:
-          authorizationUrl: 'https://login-stg.wolterskluwer.eu/as/authorization.oauth2?pfidpadapterid=JurionCompositeAdapter'
-          tokenUrl: 'https://login-stg.wolterskluwer.eu/as/token.oauth2'
-          scopes:
-            openid: OpenID context
-            profile: OpenID profile
-            urn:wkde:cwx:api: CWX API access
-    oAuth2RopcPrd:
-      description: OAuth2 authorization scheme for production endpoint (ROPC grant) - only for testing, never for user-facing clients
-      type: oauth2
-      flows:
-        password:
-          tokenUrl: 'https://login.wolterskluwer.eu/as/token.oauth2?pfidpadapterid=JurionCompositeAdapter'
-          scopes:
-            openid: OpenID context
-            profile: OpenID profile
-            urn:wkde:cwx:api: CWX API access
-    oAuth2RopcNonPrd:
-      description: OAuth2 authorization scheme for non-production endpoints (ROPC grant)
-      type: oauth2
-      flows:
-        password:
-          tokenUrl: 'https://login-stg.wolterskluwer.eu/as/token.oauth2?pfidpadapterid=JurionCompositeAdapter'
-          scopes:
-            openid: OpenID context
             profile: OpenID profile
             urn:wkde:cwx:api: CWX API access
