@@ -1,6 +1,10 @@
 # Change Log
 ------------
 
+## CaseWorx API v0.8.0
+----------------------
+- specify maximum media size for partial upload and set to 60MB (CwxMediaDomain v0.3.0)
+
 ## CaseWorx API v0.7.1
 ----------------------
 - remove `mark-for-delete` from `Change` schema, `action` enum (CwxChangeDomain v0.2.1)
