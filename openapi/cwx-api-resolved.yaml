@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 0.8.0
+  version: 0.9.0
   title: CaseWorx API
   termsOfService: 'https://www.wolterskluwer-online.de/informationen/datenschutz'
   contact:
@@ -492,6 +492,7 @@ paths:
               - application/vnd.sun.xml.impress
               - application/vnd.ms-powerpoint
               - application/vnd.openxmlformats-officedocument.presentationml.presentation
+              - application/vnd.ms-outlook
               - image/jpeg
               - image/bmp
               - image/gif
@@ -569,6 +570,9 @@ paths:
             schema:
               $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
           application/vnd.openxmlformats-officedocument.presentationml.presentation:
+            schema:
+              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+          application/vnd.ms-outlook:
             schema:
               $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
           image/jpeg:

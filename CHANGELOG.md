@@ -1,6 +1,10 @@
 # Change Log
 ------------
 
+## CaseWorx API v0.9.0
+----------------------
+- add application/vnd.ms-outlook to the list of supported MIME types to let Outlook msg files through (CwxMediaDomain v0.4.0)
+
 ## CaseWorx API v0.8.0
 ----------------------
 - specify maximum media size for partial upload and set to 60MB (CwxMediaDomain v0.3.0)
