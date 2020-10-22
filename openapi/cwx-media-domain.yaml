@@ -3,7 +3,7 @@ info:
   title: CaseWorx API - Media Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Media Domain describing shared components of the API
-  version: 0.3.0
+  version: 0.4.0
   contact: 
     name: Wolters Kluwer Deutschland GmbH
     url: https://www.caseworx-baurecht.de/informationen/kontakt
@@ -51,6 +51,7 @@ components:
         - application/vnd.sun.xml.impress
         - application/vnd.ms-powerpoint
         - application/vnd.openxmlformats-officedocument.presentationml.presentation
+        - application/vnd.ms-outlook
         - image/jpeg
         - image/bmp
         - image/gif
@@ -245,6 +246,9 @@ components:
           schema:
             $ref: '#/components/schemas/OctetStreamPayload'
         application/vnd.openxmlformats-officedocument.presentationml.presentation:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.ms-outlook:
           schema:
             $ref: '#/components/schemas/OctetStreamPayload'
         image/jpeg:
