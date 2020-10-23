@@ -1,7 +1,7 @@
 # Change Log
 ------------
 
-## CaseWorx API v0.9.0
+## CaseWorx API v0.10.0
 ----------------------
 - add x-api-key header to all requests (CwxCommonsDomain 0.3.0, CwxChangeDomain 0.5.0, CwxDocumentDomain 0.2.0)
 - clean up the MIME types declarations (CwxMediaDomain 0.5.0)
