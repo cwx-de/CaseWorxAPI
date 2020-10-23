@@ -3,7 +3,7 @@ info:
   title: CaseWorx API - Media Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Media Domain describing shared components of the API
-  version: 0.4.0
+  version: 0.5.0
   contact: 
     name: Wolters Kluwer Deutschland GmbH
     url: https://www.caseworx-baurecht.de/informationen/kontakt
@@ -77,7 +77,7 @@ components:
       schema:
         $ref: 'cwx-commons-domain.yaml#/components/schemas/UniversalId'
       required: true
-      example: wnxwnikxiuwu0u3jd    
+      example: '6c7892f5-019c-4a0d-8a21-a2f40e897e31'    
     
     LayerQueryRef:
       name: layer
@@ -107,35 +107,6 @@ components:
         maximum: 4194304
       required: true
       example: 1000
-
-    ContentType:
-      name: content-type
-      description: The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) of the content returned in payload
-      in: header
-      schema:
-        $ref: '#/components/schemas/SupportedMediaTypes'
-      required: true
-      example: application/pdf
-
-    PartialUploadContentType:
-      name: content-type
-      description: The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) of the content returned in payload. For uploads of parts it must be application/octet-stream
-      in: header
-      schema:
-        type: string
-        enum: 
-          - application/octet-stream
-        default: application/octet-stream
-      required: true
-      example: application/octet-stream
-          
-    Accept:
-      name: accept
-      description: A [list of media types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) the client is willing to accept. If Accept is not specified, defaults to \*/*.  
-      in: header
-      schema:
-        type: string
-      example: application/pdf    
 
     Range:
       name: range
@@ -181,9 +152,9 @@ components:
                 maximum: 62914560
                 example: 6000000
 
-    SimpleMediaUpload:
+    MediaUpload:
       description: |
-        Document body for upload. The document size limit is 4MB (4194304 bytes), for larger documents HTTP 413 is returned. Partial upload will be added later.  
+        Document body for upload. The request body length is limited at 4MB (4194304 bytes), for larger bodies HTTP 413 is returned.
       content:
         application/pdf:
           schema:
@@ -285,12 +256,6 @@ components:
       headers:
         x-cwx-cid:
           $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
-        content-type:
-          description: The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) of the content returned in payload
-          schema:
-            type: string
-          example: application/pdf
-          required: true
         content-disposition:
           description: An [indication of how the returned content should be handled](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition). Filename must be specified. See [RFC6266 sec. 4.3](https://tools.ietf.org/html/rfc6266#section-4.3) for handling characters outside of ISO-8859-1.
           schema:
@@ -301,17 +266,90 @@ components:
         application/pdf:
           schema:
             $ref: '#/components/schemas/PdfPayload'
+        application/vnd.oasis.opendocument.spreadsheet:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.spreadsheet-template:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.sun.xml.calc:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.ms-excel:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        text/csv:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        text/tab-separated-values:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.text:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.text-template:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.sun.xml.writer:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/rtf:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/msword:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.wordperfect:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        text/plain:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.presentation:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.presentation-template:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.sun.xml.impress:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.ms-powerpoint:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.openxmlformats-officedocument.presentationml.presentation:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.ms-outlook:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        image/jpeg:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        image/bmp:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        image/gif:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        image/png:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        image/tiff:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+
     PartialMediaDownloadOK:
       description: Partial content has been successfully delivered. It means that requested range is satisfied and Content-Range indicates the actual content range delivered. This response will also be delivered in case requested range results in making the entire resource available.
       headers:
         x-cwx-cid:
           $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
-        content-type:
-          description: The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) of the original media whose part is returned in payload. At present only application/pdf can be downloaded.
-          schema:
-            type: string
-          example: application/pdf
-          required: true
         content-disposition:
           description: An [indication of how the returned content should be handled](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition). Filename must be specified. See [RFC6266 sec. 4.3](https://tools.ietf.org/html/rfc6266#section-4.3) for handling characters outside of ISO-8859-1. The filename is that of the media object uploaded to the system.
           schema:
@@ -324,17 +362,88 @@ components:
             type: string
           required: true
           example: 'bytes 0-4194303/10000000'
-        content-length:
-          description: An [indication of the content length](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/content-length) of the payload included in the response in octets
-          schema:
-            type: integer
-            maximum: 4194304
-          required: true
-          example: 4194304            
       content:
         application/pdf:
           schema:
             $ref: '#/components/schemas/PdfPayload'
+        application/vnd.oasis.opendocument.spreadsheet:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.spreadsheet-template:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.sun.xml.calc:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.ms-excel:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        text/csv:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        text/tab-separated-values:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.text:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.text-template:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.sun.xml.writer:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/rtf:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/msword:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.wordperfect:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        text/plain:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.presentation:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.presentation-template:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.sun.xml.impress:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.ms-powerpoint:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.openxmlformats-officedocument.presentationml.presentation:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.ms-outlook:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        image/jpeg:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        image/bmp:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        image/gif:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        image/png:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        image/tiff:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
 
     UploadManagerCreatedOK:
       description: Upload manager resource created and ready for the parts to be uploaded
