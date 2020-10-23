@@ -3,7 +3,7 @@ info:
   title: CaseWorx API - Commons Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Commons Domain describing shared components of the API
-  version: "0.2.0"
+  version: 0.3.0
   contact: 
     name: Wolters Kluwer Deutschland GmbH
     url: https://www.caseworx-baurecht.de/informationen/kontakt
@@ -58,7 +58,15 @@ components:
       schema:
         $ref: '#/components/schemas/UniversalId'
       example: b50ef924-2c29-4097-904b-ab2fb286e3bb
-
+    ApiKey:
+      name: x-api-key
+      description: API key
+      in: header
+      required: false
+      schema:
+        $ref: '#/components/schemas/UniversalId'
+      example: b50ef9242c294097904bab2fb286e3bb
+    
   responses:
     Info202:
       description: |

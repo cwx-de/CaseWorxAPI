@@ -3,7 +3,7 @@ info:
   title: CaseWorx API - Change Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Change Domain describing shared components of the API
-  version: 0.4.0
+  version: 0.5.0
   contact: 
     name: Wolters Kluwer Deutschland GmbH
     url: https://www.caseworx-baurecht.de/informationen/kontakt
@@ -121,6 +121,7 @@ components:
         parameters: 
           - $ref: '#/components/parameters/PageTokenQueryRef'
           - $ref: 'cwx-commons-domain.yaml#/components/parameters/CorrelationId'
+          - $ref: 'cwx-commons-domain.yaml#/components/parameters/ApiKey'
         responses:
           '200':
             $ref: '#/components/responses/ChangesOK'
@@ -146,6 +147,7 @@ components:
           resource.
         parameters:
           - $ref: 'cwx-commons-domain.yaml#/components/parameters/CorrelationId'
+          - $ref: 'cwx-commons-domain.yaml#/components/parameters/ApiKey'
         responses:
           '200':
             $ref: '#/components/responses/StartPageTokenOK'

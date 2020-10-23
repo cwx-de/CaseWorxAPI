@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 0.9.0
+  version: 0.10.0
   title: CaseWorx API
   termsOfService: 'https://www.wolterskluwer-online.de/informationen/datenschutz'
   contact:
@@ -45,6 +45,13 @@ paths:
           maxLength: 50
           example: b50ef924-2c29-4097-904b-ab2fb286e3bb
         example: b50ef924-2c29-4097-904b-ab2fb286e3bb
+      - name: x-api-key
+        description: API key
+        in: header
+        required: false
+        schema:
+          $ref: '#/paths/~1cases/parameters/0/schema'
+        example: b50ef9242c294097904bab2fb286e3bb
     get:
       tags:
         - cases
@@ -240,6 +247,7 @@ paths:
           example: 12345
         example: 12345
       - $ref: '#/paths/~1cases/parameters/0'
+      - $ref: '#/paths/~1cases/parameters/1'
     delete:
       tags:
         - cases
@@ -292,6 +300,7 @@ paths:
     parameters:
       - $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0'
       - $ref: '#/paths/~1cases/parameters/0'
+      - $ref: '#/paths/~1cases/parameters/1'
     put:
       tags:
         - access-control
@@ -418,6 +427,7 @@ paths:
     parameters:
       - $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0'
       - $ref: '#/paths/~1cases/parameters/0'
+      - $ref: '#/paths/~1cases/parameters/1'
     get:
       tags:
         - documents
@@ -463,47 +473,9 @@ paths:
             type: string
           required: true
           example: attachment; filename*=utf-8''d%C3%A9j%C3%A0vu.pdf
-        - $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/parameters/0'
-        - name: content-type
-          description: 'The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) of the content returned in payload'
-          in: header
-          schema:
-            description: Enumeration of supported content types that document media can be uploaded in
-            type: string
-            enum:
-              - application/pdf
-              - application/vnd.oasis.opendocument.spreadsheet
-              - application/vnd.oasis.opendocument.spreadsheet-template
-              - application/vnd.sun.xml.calc
-              - application/vnd.ms-excel
-              - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
-              - text/csv
-              - text/tab-separated-values
-              - application/vnd.oasis.opendocument.text
-              - application/vnd.oasis.opendocument.text-template
-              - application/vnd.sun.xml.writer
-              - application/rtf
-              - application/msword
-              - application/vnd.openxmlformats-officedocument.wordprocessingml.document
-              - application/vnd.wordperfect
-              - text/plain
-              - application/vnd.oasis.opendocument.presentation
-              - application/vnd.oasis.opendocument.presentation-template
-              - application/vnd.sun.xml.impress
-              - application/vnd.ms-powerpoint
-              - application/vnd.openxmlformats-officedocument.presentationml.presentation
-              - application/vnd.ms-outlook
-              - image/jpeg
-              - image/bmp
-              - image/gif
-              - image/png
-              - image/tiff
-            default: application/pdf
-          required: true
-          example: application/pdf
       requestBody:
         description: |
-          Document body for upload. The document size limit is 4MB (4194304 bytes), for larger documents HTTP 413 is returned. Partial upload will be added later.  
+          Document body for upload. The request body length is limited at 4MB (4194304 bytes), for larger bodies HTTP 413 is returned.
         content:
           application/pdf:
             schema:
@@ -512,84 +484,82 @@ paths:
               format: binary
           application/vnd.oasis.opendocument.spreadsheet:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/vnd.oasis.opendocument.spreadsheet-template:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/vnd.sun.xml.calc:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/vnd.ms-excel:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           text/csv:
             schema:
-              description: Any octet stream payload schema
-              type: string
-              format: binary
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           text/tab-separated-values:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/vnd.oasis.opendocument.text:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/vnd.oasis.opendocument.text-template:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/vnd.sun.xml.writer:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/rtf:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/msword:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/vnd.openxmlformats-officedocument.wordprocessingml.document:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/vnd.wordperfect:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           text/plain:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/vnd.oasis.opendocument.presentation:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/vnd.oasis.opendocument.presentation-template:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/vnd.sun.xml.impress:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/vnd.ms-powerpoint:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/vnd.openxmlformats-officedocument.presentationml.presentation:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           application/vnd.ms-outlook:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           image/jpeg:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           image/bmp:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           image/gif:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           image/png:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
           image/tiff:
             schema:
-              $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/text~1csv/schema'
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
       responses:
         '201':
           description: Document resource created and media successfully uploaded for the document
@@ -631,6 +601,7 @@ paths:
           minimum: 0
         example: 67890
       - $ref: '#/paths/~1cases/parameters/0'
+      - $ref: '#/paths/~1cases/parameters/1'
     get:
       tags:
         - documents
@@ -880,11 +851,12 @@ paths:
       - $ref: '#/paths/~1cases~1%7BcaseId%7D/parameters/0'
       - $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents~1%7BdocumentId%7D/parameters/1'
       - $ref: '#/paths/~1cases/parameters/0'
+      - $ref: '#/paths/~1cases/parameters/1'
     get:
       tags:
         - media
       description: |
-        Returns a document media for download. At this point it is implied that the document media to be downloaded must exist in its final layer (reviewed and saved by the user). The downloaded final layer is always with annotations if there are any. Future versions of the API may implement query parameters to control layer and/or the presence of the annotations.  
+        Returns a document media for download.
       parameters:
         - name: layer
           description: 'An indication of the media layer. If omitted, it defaults to `unified`.'
@@ -900,12 +872,6 @@ paths:
             example: original
           required: true
           example: original
-        - name: accept
-          description: 'A [list of media types](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept) the client is willing to accept. If Accept is not specified, defaults to \*/*.'
-          in: header
-          schema:
-            type: string
-          example: application/pdf
         - name: range
           description: 'Specifies the start and end position of bytes to be provided. When the total size of the media is greater than 4 MB (4194304 bytes) the client must retrieve the resource using range requests. See [RFC2616 sec. 14.35](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.35). The value provided in this header must specify both first-byte-pos and last-byte-pos and cannot request multipart ranges. If it is omitted and the response payload size exceeds the 4 MB limit HTTP 500 is thrown.'
           in: header
@@ -918,12 +884,6 @@ paths:
           headers:
             x-cwx-cid:
               $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
-            content-type:
-              description: 'The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) of the content returned in payload'
-              schema:
-                type: string
-              example: application/pdf
-              required: true
             content-disposition:
               description: 'An [indication of how the returned content should be handled](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition). Filename must be specified. See [RFC6266 sec. 4.3](https://tools.ietf.org/html/rfc6266#section-4.3) for handling characters outside of ISO-8859-1.'
               schema:
@@ -934,6 +894,84 @@ paths:
             application/pdf:
               schema:
                 $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/application~1pdf/schema'
+            application/vnd.oasis.opendocument.spreadsheet:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.oasis.opendocument.spreadsheet-template:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.sun.xml.calc:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.ms-excel:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            text/csv:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            text/tab-separated-values:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.oasis.opendocument.text:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.oasis.opendocument.text-template:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.sun.xml.writer:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/rtf:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/msword:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.wordperfect:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            text/plain:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.oasis.opendocument.presentation:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.oasis.opendocument.presentation-template:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.sun.xml.impress:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.ms-powerpoint:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.openxmlformats-officedocument.presentationml.presentation:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.ms-outlook:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            image/jpeg:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            image/bmp:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            image/gif:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            image/png:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            image/tiff:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
         '202':
           $ref: '#/paths/~1cases~1%7BcaseId%7D/delete/responses/202'
         '206':
@@ -941,12 +979,6 @@ paths:
           headers:
             x-cwx-cid:
               $ref: '#/paths/~1cases/get/responses/200/headers/x-cwx-cid'
-            content-type:
-              description: 'The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) of the original media whose part is returned in payload. At present only application/pdf can be downloaded.'
-              schema:
-                type: string
-              example: application/pdf
-              required: true
             content-disposition:
               description: 'An [indication of how the returned content should be handled](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition). Filename must be specified. See [RFC6266 sec. 4.3](https://tools.ietf.org/html/rfc6266#section-4.3) for handling characters outside of ISO-8859-1. The filename is that of the media object uploaded to the system.'
               schema:
@@ -959,17 +991,88 @@ paths:
                 type: string
               required: true
               example: bytes 0-4194303/10000000
-            content-length:
-              description: 'An [indication of the content length](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/content-length) of the payload included in the response in octets'
-              schema:
-                type: integer
-                maximum: 4194304
-              required: true
-              example: 4194304
           content:
             application/pdf:
               schema:
                 $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/requestBody/content/application~1pdf/schema'
+            application/vnd.oasis.opendocument.spreadsheet:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.oasis.opendocument.spreadsheet-template:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.sun.xml.calc:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.ms-excel:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            text/csv:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            text/tab-separated-values:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.oasis.opendocument.text:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.oasis.opendocument.text-template:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.sun.xml.writer:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/rtf:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/msword:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.wordperfect:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            text/plain:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.oasis.opendocument.presentation:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.oasis.opendocument.presentation-template:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.sun.xml.impress:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.ms-powerpoint:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.openxmlformats-officedocument.presentationml.presentation:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.ms-outlook:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            image/jpeg:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            image/bmp:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            image/gif:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            image/png:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            image/tiff:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
         '400':
           $ref: '#/paths/~1cases/get/responses/400'
         '401':
@@ -1009,6 +1112,7 @@ paths:
   /uploads:
     parameters:
       - $ref: '#/paths/~1cases/parameters/0'
+      - $ref: '#/paths/~1cases/parameters/1'
     post:
       tags:
         - media
@@ -1040,7 +1144,37 @@ paths:
                   minLength: 1
                   example: myMedia.pdf
                 contentType:
-                  $ref: '#/paths/~1cases~1%7BcaseId%7D~1documents/post/parameters/2/schema'
+                  description: Enumeration of supported content types that document media can be uploaded in
+                  type: string
+                  enum:
+                    - application/pdf
+                    - application/vnd.oasis.opendocument.spreadsheet
+                    - application/vnd.oasis.opendocument.spreadsheet-template
+                    - application/vnd.sun.xml.calc
+                    - application/vnd.ms-excel
+                    - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+                    - text/csv
+                    - text/tab-separated-values
+                    - application/vnd.oasis.opendocument.text
+                    - application/vnd.oasis.opendocument.text-template
+                    - application/vnd.sun.xml.writer
+                    - application/rtf
+                    - application/msword
+                    - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+                    - application/vnd.wordperfect
+                    - text/plain
+                    - application/vnd.oasis.opendocument.presentation
+                    - application/vnd.oasis.opendocument.presentation-template
+                    - application/vnd.sun.xml.impress
+                    - application/vnd.ms-powerpoint
+                    - application/vnd.openxmlformats-officedocument.presentationml.presentation
+                    - application/vnd.ms-outlook
+                    - image/jpeg
+                    - image/bmp
+                    - image/gif
+                    - image/png
+                    - image/tiff
+                  default: application/pdf
                 contentLength:
                   description: 'Length of the entire media object in bytes, for partial upload the media size should be greater than 4MB (4194304 bytes). For smaller media use simple upload. Maximum size of the media object is 60MB (62914560 bytes)'
                   type: integer
@@ -1096,8 +1230,9 @@ paths:
         schema:
           $ref: '#/paths/~1cases/parameters/0/schema'
         required: true
-        example: wnxwnikxiuwu0u3jd
+        example: 6c7892f5-019c-4a0d-8a21-a2f40e897e31
       - $ref: '#/paths/~1cases/parameters/0'
+      - $ref: '#/paths/~1cases/parameters/1'
     put:
       tags:
         - media
@@ -1105,14 +1240,6 @@ paths:
         Use an upload manager with the specified ID to exceute uploads of a document media part.  
         The client must ensure that the last part is only uploaded when all previous uploads have finished successfully.
       parameters:
-        - name: content-length
-          description: 'An [indication of the content length](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/content-length) in octets'
-          in: header
-          schema:
-            type: integer
-            maximum: 4194304
-          required: true
-          example: 1000
         - name: content-range
           description: |
             Provides an indication of which part of the media object is being delivered. See [RFC7233 sec. 4.2](https://tools.ietf.org/html/rfc7233#section-4.2). Must specify byte-content-range with complete-length. Must be consistent with Content-Length value.
@@ -1121,16 +1248,16 @@ paths:
             type: string
           required: true
           example: bytes 0-4194303/10000000
-        - name: content-type
-          description: 'The [media type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) of the content returned in payload. For uploads of parts it must be application/octet-stream'
-          in: header
-          schema:
-            type: string
-            enum:
-              - application/octet-stream
-            default: application/octet-stream
-          required: true
-          example: application/octet-stream
+      requestBody:
+        description: |
+          Fragment of the documewnt body for upload. The request body length is limited at 4MB (4194304 bytes), for larger bodies HTTP 413 is returned.  
+          The content-type of a fragment is always application/octet-stream, the content type of the full document is determined while creating upload manager.
+        content:
+          application/octet-stream:
+            schema:
+              description: Any octet stream payload schema
+              type: string
+              format: binary
       responses:
         '202':
           description: 'Delivered part of the media object has been successfully uploaded. When all parts of the media resource have been uploaded, the resource will be automatically assembled. Client is expected to manage the upload and determine when all parts have been successfully uploaded.'
@@ -1196,6 +1323,7 @@ paths:
           schema:
             $ref: '#/paths/~1cases/parameters/0/schema'
         - $ref: '#/paths/~1cases/parameters/0'
+        - $ref: '#/paths/~1cases/parameters/1'
       responses:
         '200':
           description: |
@@ -1298,6 +1426,7 @@ paths:
         resource.
       parameters:
         - $ref: '#/paths/~1cases/parameters/0'
+        - $ref: '#/paths/~1cases/parameters/1'
       responses:
         '200':
           description: Returns start page token

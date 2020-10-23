@@ -3,7 +3,7 @@ info:
   title: CaseWorx API - Access Control Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Access Control Domain describing components of the ACL manipulation
-  version: 0.1.0
+  version: 0.2.0
   contact: 
     name: Wolters Kluwer Deutschland GmbH
     url: https://www.caseworx-baurecht.de/informationen/kontakt
