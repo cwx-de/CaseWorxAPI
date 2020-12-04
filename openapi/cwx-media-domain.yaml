@@ -3,7 +3,7 @@ info:
   title: CaseWorx API - Media Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Media Domain describing shared components of the API
-  version: 0.5.0
+  version: 0.6.0
   contact: 
     name: Wolters Kluwer Deutschland GmbH
     url: https://www.caseworx-baurecht.de/informationen/kontakt
@@ -57,6 +57,9 @@ components:
         - image/gif
         - image/png
         - image/tiff
+        - application/vnd.oasis.opendocument.graphics
+        - application/vnd.oasis.opendocument.graphics-template
+        - text/html
       default: application/pdf
       
     OctetStreamPayload:
@@ -237,7 +240,16 @@ components:
         image/tiff:
           schema:
             $ref: '#/components/schemas/OctetStreamPayload'
-            
+        application/vnd.oasis.opendocument.graphics:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.graphics-template:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+
   responses:
     SimpleMediaUploadOK:
       description: Document resource created and media successfully uploaded for the document
@@ -344,6 +356,15 @@ components:
         image/tiff:
           schema:
             $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.graphics:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.graphics-template:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
 
     PartialMediaDownloadOK:
       description: Partial content has been successfully delivered. It means that requested range is satisfied and Content-Range indicates the actual content range delivered. This response will also be delivered in case requested range results in making the entire resource available.
@@ -442,6 +463,15 @@ components:
           schema:
             $ref: '#/components/schemas/OctetStreamPayload'
         image/tiff:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.graphics:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        application/vnd.oasis.opendocument.graphics-template:
+          schema:
+            $ref: '#/components/schemas/OctetStreamPayload'
+        text/html:
           schema:
             $ref: '#/components/schemas/OctetStreamPayload'
 

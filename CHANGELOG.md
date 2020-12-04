@@ -1,8 +1,12 @@
 # Change Log
 ------------
 
+## CaseWorx API v0.11.0
+-----------------------
+- add application/vnd.oasis.opendocument.graphics, application/vnd.oasis.opendocument.graphics-template, text/html to the list of supported MIME types (CwxMediaDomain v0.6.0)
+
 ## CaseWorx API v0.10.0
-----------------------
+-----------------------
 - add x-api-key header to all requests (CwxCommonsDomain 0.3.0, CwxChangeDomain 0.5.0, CwxDocumentDomain 0.2.0)
 - clean up the MIME types declarations (CwxMediaDomain 0.5.0)
 

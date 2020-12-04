@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 0.10.0
+  version: 0.11.0
   title: CaseWorx API
   termsOfService: 'https://www.wolterskluwer-online.de/informationen/datenschutz'
   contact:
@@ -560,6 +560,15 @@ paths:
           image/tiff:
             schema:
               $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+          application/vnd.oasis.opendocument.graphics:
+            schema:
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+          application/vnd.oasis.opendocument.graphics-template:
+            schema:
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+          text/html:
+            schema:
+              $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
       responses:
         '201':
           description: Document resource created and media successfully uploaded for the document
@@ -972,6 +981,15 @@ paths:
             image/tiff:
               schema:
                 $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.oasis.opendocument.graphics:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.oasis.opendocument.graphics-template:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            text/html:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
         '202':
           $ref: '#/paths/~1cases~1%7BcaseId%7D/delete/responses/202'
         '206':
@@ -1071,6 +1089,15 @@ paths:
               schema:
                 $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
             image/tiff:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.oasis.opendocument.graphics:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            application/vnd.oasis.opendocument.graphics-template:
+              schema:
+                $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
+            text/html:
               schema:
                 $ref: '#/paths/~1uploads~1%7BuploadId%7D/put/requestBody/content/application~1octet-stream/schema'
         '400':
@@ -1174,6 +1201,9 @@ paths:
                     - image/gif
                     - image/png
                     - image/tiff
+                    - application/vnd.oasis.opendocument.graphics
+                    - application/vnd.oasis.opendocument.graphics-template
+                    - text/html
                   default: application/pdf
                 contentLength:
                   description: 'Length of the entire media object in bytes, for partial upload the media size should be greater than 4MB (4194304 bytes). For smaller media use simple upload. Maximum size of the media object is 60MB (62914560 bytes)'
