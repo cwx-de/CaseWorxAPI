@@ -3,12 +3,12 @@
 # Set SWAGGER_API_KEY to access private resources
 echo "SwaggerHub authorization: ${SWAGGER_API_KEY:-anonymous}"
 
-API_VER='0.10.0'
+API_VER='0.11.0'
 COMMONS_VER='0.3.0'
 CASE_VER='0.3.0'
 DOCUMENT_VER='0.2.0'
-MEDIA_VER='0.5.0'
-CHANGE_VER='0.5.0'
+MEDIA_VER='0.6.0'
+CHANGE_VER='0.6.0'
 ACCESS_CTRL_VER='0.2.0'
 
 API_URL="https://api.swaggerhub.com/apis/CaseWorx/CwxAPI/$API_VER"

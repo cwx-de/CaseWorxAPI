@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 0.10.0
+  version: 0.11.0
   title: 'CaseWorx API'
   termsOfService: https://www.wolterskluwer-online.de/informationen/datenschutz
   contact: 
@@ -16,6 +16,7 @@ info:
 servers:
   - description: Production environment
     url: https://api.caseworx-baurecht.de/v0
+
 tags: 
   - name: access-control
     description: Operations on ACLs
