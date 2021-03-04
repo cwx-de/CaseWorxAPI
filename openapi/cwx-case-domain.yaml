@@ -3,7 +3,7 @@ info:
   title: CaseWorx API - Case Domain
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API - Case Domain describing components of the case
-  version: 0.3.0
+  version: 0.4.0
   contact: 
     name: Wolters Kluwer Deutschland GmbH
     url: https://www.caseworx-baurecht.de/informationen/kontakt
@@ -117,3 +117,28 @@ components:
           schema:
             type: string
           example: https://api.caseworx-baurecht.de/v0/cases/12345
+    CaseCreateError400:
+      description: |
+        Requested case cannot be created  
+        `status`: `malformed_request`  
+        Request structure does not comply with the specification.  
+        `status`: `already_exists`  
+        The request is syntactically valid but the case entity with requested name already exists.
+      headers:
+        x-cwx-cid:
+          $ref: 'cwx-commons-domain.yaml#/components/headers/x-cwx-cid'
+      content:
+        application/json:
+          schema:
+            $ref: 'cwx-commons-domain.yaml#/components/schemas/Error'
+          examples:
+            already_exists:
+              description: Error response indicating that a case with requested name already exists and a duplicate is not allowed.
+              value:
+                status: already_exists
+                message: A case with the requested name already exists.
+            malformed_request:
+              description: Error response indicating that request structure does not compy with the specification
+              value:
+                status: malformed_request
+                message: Malformed request

@@ -3,6 +3,10 @@
 
 ## CaseWorx API v0.11.0
 -----------------------
+- Add business constraint requiring a case name to be unique. Relevant indication in `status` of the error response to POST /cases added. (CwxCaseDomain v0.4.0)
+
+## CaseWorx API v0.11.0
+-----------------------
 - add application/vnd.oasis.opendocument.graphics, application/vnd.oasis.opendocument.graphics-template, text/html to the list of supported MIME types (CwxMediaDomain v0.6.0)
 
 ## CaseWorx API v0.10.0
