@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  version: 0.11.0
+  version: 0.12.0
   title: 'CaseWorx API'
   termsOfService: https://www.wolterskluwer-online.de/informationen/datenschutz
   contact: 
@@ -13,6 +13,10 @@ info:
   description: |
     [CaseWorx](https://app.caseworx-baurecht.de/) API
 
+externalDocs:
+  description: Change log
+  url: https://github.com/cwx-de/CaseWorxAPI/blob/master/CHANGELOG.md
+    
 servers:
   - description: Production environment
     url: https://api.caseworx-baurecht.de/v0
@@ -81,7 +85,7 @@ paths:
         '201':
           $ref: 'cwx-case-domain.yaml#/components/responses/CaseCreatedOK'
         '400':
-          $ref: 'cwx-commons-domain.yaml#/components/responses/Error400'
+          $ref: 'cwx-case-domain.yaml#/components/responses/CaseCreateError400'
         '401':
           $ref: 'cwx-commons-domain.yaml#/components/responses/Error401'
         '403':

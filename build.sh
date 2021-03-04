@@ -3,9 +3,9 @@
 # Set SWAGGER_API_KEY to access private resources
 echo "SwaggerHub authorization: ${SWAGGER_API_KEY:-anonymous}"
 
-API_VER='0.11.0'
+API_VER='0.12.0'
 COMMONS_VER='0.3.0'
-CASE_VER='0.3.0'
+CASE_VER='0.4.0'
 DOCUMENT_VER='0.2.0'
 MEDIA_VER='0.6.0'
 CHANGE_VER='0.6.0'
@@ -94,5 +94,5 @@ curl -s -H "Authorization: ${SWAGGER_API_KEY}" -X GET "$ACCESS_CTRL_URL/domain.y
 		>$BUILD_DIR/$ACCESS_CTRL_FNAME
 
 swagger-cli validate $BUILD_DIR/$API_FNAME
-swagger-cli bundle --outfile $BUILD_DIR/$API_RESOLVED_FNAME --type yaml $BUILD_DIR/$API_FNAME
+swagger-cli bundle --outfile $BUILD_DIR/$API_RESOLVED_FNAME --type yaml --dereference $BUILD_DIR/$API_FNAME
 swagger-cli validate $BUILD_DIR/$API_RESOLVED_FNAME
