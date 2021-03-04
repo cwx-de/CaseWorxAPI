@@ -1,7 +1,7 @@
 # Change Log
 ------------
 
-## CaseWorx API v0.11.0
+## CaseWorx API v0.12.0
 -----------------------
 - Add business constraint requiring a case name to be unique. Relevant indication in `status` of the error response to POST /cases added. (CwxCaseDomain v0.4.0)
 
